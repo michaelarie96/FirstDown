@@ -2,4 +2,16 @@
 <resources>
     <color name="black">#FF000000</color>
     <color name="white">#FFFFFFFF</color>
+
+    <!-- App-specific colors -->
+    <color name="primary">#1A202C</color>
+    <color name="primary_light">#2D3748</color>
+    <color name="accent">#4299E1</color>
+    <color name="background">#F7FAFC</color>
+    <color name="text_primary">#1A202C</color>
+    <color name="text_secondary">#4A5568</color>
+    <color name="button_primary">#1A202C</color>
+    <color name="button_secondary">#E2E8F0</color>
+    <color name="progress_bg">#E2E8F0</color>
+    <color name="progress_fill">#1A202C</color>
 </resources>

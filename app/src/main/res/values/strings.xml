@@ -1,3 +1,50 @@
 <resources>
     <string name="app_name">First Down</string>
+
+    <!-- Welcome Screen -->
+    <string name="welcome_title">Learn Football Basics</string>
+    <string name="welcome_subtitle">Master the fundamentals of American Football with simple, interactive lessons designed for beginners.</string>
+    <string name="get_started">Get Started</string>
+    <string name="sign_in">Sign In</string>
+    <string name="logo_desc">First Down Logo</string>
+    <string name="field_desc">Football field</string>
+
+    <!-- Home Screen -->
+    <string name="greeting">Hi, %s</string>
+    <string name="day_streak">%d day streak</string>
+    <string name="today_goal">Today\'s Goal</string>
+    <string name="continue_learning">Continue Learning</string>
+    <string name="min_lesson">%d min lesson</string>
+    <string name="latest_achievement">Latest Achievement</string>
+    <string name="earned_days_ago">Earned %d days ago</string>
+    <string name="quick_tip">Quick Tip</string>
+    <string name="start_learning">Start Learning</string>
+    <string name="continue_str">Continue</string>
+    <string name="start_str">Start</string>
+    <string name="completed_str">Completed</string>
+    <string name="iv_profile_desc">Profile</string>
+    <string name="iv_trophy_desc">Trophy</string>
+    <string name="iv_football_desc">Football</string>
+    <string name="complete_lesson_goal">Complete %s Module</string>
+
+    <!-- Progress Screen -->
+    <string name="your_progress">Your Progress</string>
+    <string name="progress_percent">%d\%% Complete</string>
+    <string name="continue_learning_button">Continue Learning</string>
+    <string name="continue_chapter">Continue Chapter</string>
+    <string name="resume_learning">Resume Learning</string>
+    <string name="start_chapter">Start Chapter</string>
+    <string name="complete_previous">Complete Previous Chapters</string>
+    <string name="btn_back_desc">Back</string>
+    <string name="course_title">Football Basics</string>
+    <string name="btn_menu_desc">Menu</string>
+
+    <!-- Profile -->
+    <string name="profile">Profile</string>
+    <string name="statistics">Statistics</string>
+    <string name="lessons">Lessons</string>
+    <string name="score">Score</string>
+    <string name="time">Time</string>
+    <string name="achievements">Achievements</string>
+    <string name="recent_activity">Recent Activity</string>
 </resources>
