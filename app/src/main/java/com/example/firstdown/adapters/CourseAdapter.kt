@@ -7,12 +7,13 @@ import android.widget.Button
 import android.widget.ImageView
 import android.widget.ProgressBar
 import android.widget.TextView
+import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.RecyclerView
 import com.example.firstdown.R
 import com.example.firstdown.model.Course
 
 class CourseAdapter(
-    private val courses: List<Course>,
+    private var courses: List<Course>,
     private val listener: OnCourseClickListener
 ) : RecyclerView.Adapter<CourseAdapter.CourseViewHolder>() {
 
@@ -31,6 +32,26 @@ class CourseAdapter(
     }
 
     override fun getItemCount(): Int = courses.size
+
+
+    fun updateCourses(newCourses: List<Course>) {
+        val oldList = ArrayList(courses)
+        val diffResult = DiffUtil.calculateDiff(object : DiffUtil.Callback() {
+            override fun getOldListSize() = oldList.size
+            override fun getNewListSize() = newCourses.size
+
+            override fun areItemsTheSame(oldItemPosition: Int, newItemPosition: Int): Boolean {
+                return oldList[oldItemPosition].id == newCourses[newItemPosition].id
+            }
+
+            override fun areContentsTheSame(oldItemPosition: Int, newItemPosition: Int): Boolean {
+                return oldList[oldItemPosition] == newCourses[newItemPosition]
+            }
+        })
+
+        courses = newCourses
+        diffResult.dispatchUpdatesTo(this)
+    }
 
     class CourseViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
         private val ivCourseImage: ImageView = itemView.findViewById(R.id.iv_course_image)

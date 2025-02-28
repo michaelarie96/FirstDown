@@ -324,7 +324,7 @@
                     </LinearLayout>
 
                     <com.google.android.material.button.MaterialButton
-                        android:id="@+id/btn_resume_learning"
+                        android:id="@+id/btn_resume_chapter"
                         android:layout_width="match_parent"
                         android:layout_height="@dimen/button_height"
                         android:layout_marginTop="@dimen/margin_medium"

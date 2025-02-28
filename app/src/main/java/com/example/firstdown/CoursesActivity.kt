@@ -1,44 +1,52 @@
+// File: app/src/main/java/com/example/firstdown/CoursesActivity.kt
 package com.example.firstdown
 
 import android.content.Intent
 import android.os.Bundle
-import android.widget.ImageButton
+import androidx.activity.viewModels
 import androidx.appcompat.app.AppCompatActivity
 import androidx.recyclerview.widget.LinearLayoutManager
-import androidx.recyclerview.widget.RecyclerView
 import com.example.firstdown.adapters.CourseAdapter
+import com.example.firstdown.databinding.ActivityCoursesBinding
 import com.example.firstdown.model.Course
-import com.example.firstdown.model.DataManager
+import com.example.firstdown.viewmodel.CoursesViewModel
 
 class CoursesActivity : AppCompatActivity(), CourseAdapter.OnCourseClickListener {
 
-    private lateinit var recyclerView: RecyclerView
+    private lateinit var binding: ActivityCoursesBinding
+    private val viewModel: CoursesViewModel by viewModels()
     private lateinit var courseAdapter: CourseAdapter
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        setContentView(R.layout.activity_courses)
+        binding = ActivityCoursesBinding.inflate(layoutInflater)
+        setContentView(binding.root)
 
+        setupUI()
+    }
+
+    private fun setupUI() {
         // Set up the back button
-        val btnBack: ImageButton = findViewById(R.id.btn_back)
-        btnBack.setOnClickListener {
+        binding.btnBack.setOnClickListener {
             finish()
         }
 
         // Set up the RecyclerView
         setupRecyclerView()
+
+        // Get courses from ViewModel
+        val courses = viewModel.getAllCourses()
+
+        // Update the adapter with the courses
+        courseAdapter.updateCourses(courses)
     }
 
     private fun setupRecyclerView() {
-        recyclerView = findViewById(R.id.rv_courses)
-        recyclerView.layoutManager = LinearLayoutManager(this)
-
-        // Get courses from DataManager
-        val courses = DataManager.getAllCourses()
+        binding.rvCourses.layoutManager = LinearLayoutManager(this)
 
         // Create and set the adapter
-        courseAdapter = CourseAdapter(courses, this)
-        recyclerView.adapter = courseAdapter
+        courseAdapter = CourseAdapter(emptyList(), this)
+        binding.rvCourses.adapter = courseAdapter
     }
 
     // Handle course click events

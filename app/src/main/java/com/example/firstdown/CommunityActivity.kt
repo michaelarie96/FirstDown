@@ -1,65 +1,65 @@
 package com.example.firstdown
 
 import android.os.Bundle
+import android.text.Editable
+import android.text.TextWatcher
 import android.view.View
-import android.widget.EditText
-import android.widget.ImageButton
-import android.widget.TextView
+import android.widget.Toast
+import androidx.activity.viewModels
 import androidx.appcompat.app.AppCompatActivity
-import androidx.cardview.widget.CardView
 import androidx.recyclerview.widget.LinearLayoutManager
-import androidx.recyclerview.widget.RecyclerView
+import com.example.firstdown.adapters.PostAdapter
+import com.example.firstdown.databinding.ActivityCommunityBinding
 import com.example.firstdown.model.Post
-import com.google.android.material.floatingactionbutton.FloatingActionButton
+import com.example.firstdown.viewmodel.CommunityViewModel
 import com.google.android.material.tabs.TabLayout
 
-class CommunityActivity : AppCompatActivity() {
+class CommunityActivity : AppCompatActivity(), PostAdapter.PostInteractionListener {
 
-    private lateinit var tabLayout: TabLayout
-    private lateinit var searchEditText: EditText
-    private lateinit var fabNewPost: FloatingActionButton
+    private lateinit var binding: ActivityCommunityBinding
+    private val viewModel: CommunityViewModel by viewModels()
+    private lateinit var postAdapter: PostAdapter
 
-    // Sample posts data - in a real app, this would come from a database or API
-    private val posts = listOf(
-        Post(
-            id = "post1",
-            userProfileImage = "https://placeholder.com/user1",
-            userName = "John Cooper",
-            timeAgo = "2 hours ago",
-            content = "What's the best way to improve ball control during high-pressure situations? Any drills recommendations?",
-            imageUrl = null,
-            likes = 24,
-            comments = 8
-        ),
-        Post(
-            id = "post2",
-            userProfileImage = "https://placeholder.com/user2",
-            userName = "Sarah Wilson",
-            timeAgo = "5 hours ago",
-            content = "Pro tip: Here's a quick drill for improving your first touch. Practice this for 15 minutes daily.",
-            imageUrl = "https://placeholder.com/football-drill",
-            likes = 56,
-            comments = 12
-        )
-    )
+    // Current filter state
+    private var currentTabPosition = 0
+    private var currentSearchQuery = ""
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        setContentView(R.layout.activity_community)
+        binding = ActivityCommunityBinding.inflate(layoutInflater)
+        setContentView(binding.root)
 
-        // Initialize views
-        tabLayout = findViewById(R.id.tab_layout)
-        searchEditText = findViewById(R.id.et_search)
-        fabNewPost = findViewById(R.id.fab_new_post)
+        setupUI()
+        setupListeners()
+        displayPosts()
+    }
 
-        // Set up the recycler view
-        setupPostsRecyclerView()
+    private fun setupUI() {
+        // Set up tab layout
+        binding.tabLayout.apply {
+            addTab(newTab().setText("All Posts"))
+            addTab(newTab().setText("Questions"))
+            addTab(newTab().setText("Tips"))
+        }
 
-        // Set up tab selection listener
-        tabLayout.addOnTabSelectedListener(object : TabLayout.OnTabSelectedListener {
+        // Initialize adapter
+        postAdapter = PostAdapter()
+        postAdapter.listener = this
+
+        // Set up RecyclerView
+        binding.rvPosts.apply {
+            layoutManager = LinearLayoutManager(this@CommunityActivity)
+            adapter = postAdapter
+            setHasFixedSize(true) // Optimization if items have fixed size
+        }
+    }
+
+    private fun setupListeners() {
+        // Tab selection listener
+        binding.tabLayout.addOnTabSelectedListener(object : TabLayout.OnTabSelectedListener {
             override fun onTabSelected(tab: TabLayout.Tab) {
-                // Filter posts based on tab selection
-                // For now, we'll just keep showing all posts
+                currentTabPosition = tab.position
+                applyFiltersAndDisplayPosts()
             }
 
             override fun onTabUnselected(tab: TabLayout.Tab) {}
@@ -67,43 +67,74 @@ class CommunityActivity : AppCompatActivity() {
             override fun onTabReselected(tab: TabLayout.Tab) {}
         })
 
-        // Set up FAB click listener
-        fabNewPost.setOnClickListener {
-            // Open new post creation screen
-            // This will be implemented in a future step
+        // Search input listener
+        binding.etSearch.addTextChangedListener(object : TextWatcher {
+            override fun beforeTextChanged(s: CharSequence?, start: Int, count: Int, after: Int) {}
+
+            override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) {
+                currentSearchQuery = s.toString()
+                applyFiltersAndDisplayPosts()
+            }
+
+            override fun afterTextChanged(s: Editable?) {}
+        })
+
+        // New post button
+        binding.fabNewPost.setOnClickListener {
+            // Handle new post creation (to be implemented later)
+            Toast.makeText(this, "New post feature coming soon!", Toast.LENGTH_SHORT).show()
         }
     }
 
-    private fun setupPostsRecyclerView() {
-        // In a real app, you would implement a RecyclerView adapter for the posts
-        // For simplicity, we'll just add the posts directly to the layout
+    private fun applyFiltersAndDisplayPosts() {
+        // Apply both tab filter and search query
+        val filteredPosts = if (currentSearchQuery.isNotEmpty()) {
+            viewModel.searchPosts(currentSearchQuery)
+        } else {
+            viewModel.filterPostsByType(currentTabPosition)
+        }
 
-        val postContainer = findViewById<CardView>(R.id.card_post1)
-        val tvUserName = postContainer.findViewById<TextView>(R.id.comm_tv_user_name)
-        val tvTimeAgo = postContainer.findViewById<TextView>(R.id.tv_time_ago)
-        val tvContent = postContainer.findViewById<TextView>(R.id.tv_post_content)
-        val tvLikes = postContainer.findViewById<TextView>(R.id.tv_likes)
-        val tvComments = postContainer.findViewById<TextView>(R.id.tv_comments)
+        displayFilteredPosts(filteredPosts)
+    }
 
-        // Set post 1 data
-        tvUserName.text = posts[0].userName
-        tvTimeAgo.text = posts[0].timeAgo
-        tvContent.text = posts[0].content
-        tvLikes.text = posts[0].likes.toString()
-        tvComments.text = posts[0].comments.toString()
+    private fun displayPosts() {
+        // Get all posts from ViewModel
+        val allPosts = viewModel.getAllPosts()
+        displayFilteredPosts(allPosts)
+    }
 
-        // Set post 2 data
-        val postContainer2 = findViewById<CardView>(R.id.card_post2)
-        val tvUserName2 = postContainer2.findViewById<TextView>(R.id.comm_tv_user_name)
-        val tvTimeAgo2 = postContainer2.findViewById<TextView>(R.id.tv_time_ago)
-        val tvContent2 = postContainer2.findViewById<TextView>(R.id.tv_post_content)
-        val tvLikes2 = postContainer2.findViewById<TextView>(R.id.tv_likes)
-        val tvComments2 = postContainer2.findViewById<TextView>(R.id.tv_comments)
+    private fun displayFilteredPosts(posts: List<Post>) {
+        if (posts.isEmpty()) {
+            // Show empty state
+            binding.tvEmptyState.visibility = View.VISIBLE
+            binding.rvPosts.visibility = View.GONE
+        } else {
+            // Show posts
+            binding.tvEmptyState.visibility = View.GONE
+            binding.rvPosts.visibility = View.VISIBLE
 
-        tvUserName2.text = posts[1].userName
-        tvTimeAgo2.text = posts[1].timeAgo
-        tvContent2.text = posts[1].content
-        tvLikes2.text = posts[1].likes.toString()
-        tvComments2.text = posts[1].comments.toString()
+            // Update adapter with new posts
+            postAdapter.updatePosts(posts)
+        }
+    }
+
+    // PostInteractionListener implementation
+    override fun onLikeClicked(post: Post, position: Int) {
+        // Update like count through ViewModel
+        val updatedLikes = viewModel.toggleLike(post.id)
+        Toast.makeText(this, "Liked! Total likes: $updatedLikes", Toast.LENGTH_SHORT).show()
+
+        // Refresh the post list (in a real app, you'd update just the changed item)
+        displayPosts()
+    }
+
+    override fun onCommentClicked(post: Post, position: Int) {
+        // Navigate to comments screen or show comments dialog
+        Toast.makeText(this, "Comments feature coming soon!", Toast.LENGTH_SHORT).show()
+    }
+
+    override fun onBookmarkClicked(post: Post, position: Int) {
+        // Handle bookmark/save functionality
+        Toast.makeText(this, "Post saved!", Toast.LENGTH_SHORT).show()
     }
 }

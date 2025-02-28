@@ -212,5 +212,32 @@ class DataManager {
             goalCompleted = completed
             // In future, save this to SharedPreferences or a database
         }
+
+        private val posts = listOf(
+            Post(
+                id = "post1",
+                userProfileImage = "https://placeholder.com/user1",
+                userName = "John Cooper",
+                timeAgo = "2 hours ago",
+                content = "What's the best way to improve ball control during high-pressure situations? Any drills recommendations?",
+                imageUrl = null,
+                likes = 24,
+                comments = 8
+            ),
+            Post(
+                id = "post2",
+                userProfileImage = "https://placeholder.com/user2",
+                userName = "Sarah Wilson",
+                timeAgo = "5 hours ago",
+                content = "Pro tip: Here's a quick drill for improving your first touch. Practice this for 15 minutes daily.",
+                imageUrl = "https://placeholder.com/football-drill",
+                likes = 56,
+                comments = 12
+            )
+        )
+
+        fun getAllPosts(): List<Post> = posts
+        fun getPostById(postId: String): Post? = posts.find { it.id == postId }
+
     }
 }

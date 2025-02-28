@@ -2,125 +2,113 @@ package com.example.firstdown
 
 import android.content.Intent
 import android.os.Bundle
-import android.widget.Button
-import android.widget.CheckBox
-import android.widget.ImageView
-import android.widget.TextView
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
-import androidx.cardview.widget.CardView
-import androidx.constraintlayout.widget.ConstraintLayout
-import com.example.firstdown.model.DataManager
-import com.example.firstdown.model.User
+import androidx.activity.viewModels
+import com.example.firstdown.databinding.ActivityMainBinding
+import com.example.firstdown.viewmodel.MainViewModel
 
 class MainActivity : AppCompatActivity() {
 
+    private lateinit var binding: ActivityMainBinding
+    private val viewModel: MainViewModel by viewModels()
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        setContentView(R.layout.activity_main)
+        binding = ActivityMainBinding.inflate(layoutInflater)
+        setContentView(binding.root)
 
         setupUI()
-        setupNavigationListeners()
+        setupListeners()
     }
 
     private fun setupUI() {
-        // Get the current user from DataManager
-        val currentUser = DataManager.getCurrentUser()
+        // Get data from ViewModel
+        val currentUser = viewModel.getCurrentUser()
+        val currentLesson = viewModel.getCurrentLesson()
 
-        // Get the current lesson the user is working on
-        val currentLesson = DataManager.getCurrentLesson()
+        // Set user information
+        binding.tvGreeting.text = getString(R.string.greeting, currentUser.name)
+        binding.tvStreak.text = getString(R.string.day_streak, currentUser.streakDays)
 
-        // Set user greeting
-        val tvGreeting: TextView = findViewById(R.id.tv_greeting)
-        tvGreeting.text = getString(R.string.greeting, currentUser.name)
+        // Set lesson information
+        binding.tvGoalDescription.text = getString(R.string.complete_lesson_goal, currentLesson.title)
+        binding.tvLessonTitle.text = currentLesson.title
+        binding.tvLessonDescription.text = currentLesson.description
+        binding.tvLessonDuration.text = getString(R.string.min_lesson, currentLesson.durationMinutes)
 
-        // Set user streak
-        val tvStreak: TextView = findViewById(R.id.tv_streak)
-        tvStreak.text = getString(R.string.day_streak, currentUser.streakDays)
+        // Set up button text based on lesson progress
+        updateStartButtonText(currentLesson.id)
 
-        // Set the goal description with current lesson title
-        val tvGoalDescription: TextView = findViewById(R.id.tv_goal_description)
-        tvGoalDescription.text = getString(R.string.complete_lesson_goal, currentLesson.title)
+        // Set up checkbox state
+        binding.cbGoalCompleted.isChecked = viewModel.isGoalCompleted()
+    }
 
-        // Set up the lesson card with actual lesson data
-        val tvLessonTitle: TextView = findViewById(R.id.tv_lesson_title)
-        tvLessonTitle.text = currentLesson.title
-
-        // Set the lesson description from DataManager
-        val tvLessonDescription: TextView = findViewById(R.id.tv_lesson_description)
-        tvLessonDescription.text = currentLesson.description
-
-        // Set lesson duration
-        val tvLessonDuration: TextView = findViewById(R.id.tv_lesson_duration)
-        tvLessonDuration.text = getString(R.string.min_lesson, currentLesson.durationMinutes)
-
-        // Setup the action button based on lesson progress
-        val btnAction: Button = findViewById(R.id.btn_start)
-
-        if (DataManager.hasStartedLesson(currentLesson.id)) {
-            btnAction.text = getString(R.string.continue_str)
+    private fun updateStartButtonText(lessonId: String) {
+        if (viewModel.hasStartedLesson(lessonId)) {
+            binding.btnStart.text = getString(R.string.continue_str)
         } else {
-            btnAction.text = getString(R.string.start_str)
-        }
-
-        btnAction.setOnClickListener {
-            // Create intent to navigate to the lesson
-            val intent = Intent(this, LessonContentActivity::class.java)
-            intent.putExtra("LESSON_ID", currentLesson.id)
-            intent.putExtra("LESSON_TITLE", currentLesson.title)
-
-            // Get the correct page based on progress
-            val currentPage = if (DataManager.hasStartedLesson(currentLesson.id)) {
-                DataManager.getLessonProgress(currentLesson.id)
-            } else {
-                1 // Start from the first page
-            }
-
-            intent.putExtra("CURRENT_PAGE", currentPage)
-            intent.putExtra("TOTAL_PAGES", currentLesson.content.size)
-
-            startActivity(intent)
-        }
-
-        // Setup goal completion checkbox
-        val cbGoalCompleted: CheckBox = findViewById(R.id.cb_goal_completed)
-        cbGoalCompleted.isChecked = DataManager.isGoalCompleted()
-
-        cbGoalCompleted.setOnCheckedChangeListener { _, isChecked ->
-            DataManager.setGoalCompleted(isChecked)
-            if (isChecked) {
-                // Perhaps update the user's streak or show a celebration animation
-                Toast.makeText(this, "Goal completed! Great job!", Toast.LENGTH_SHORT).show()
-            }
+            binding.btnStart.text = getString(R.string.start_str)
         }
     }
 
-    private fun setupNavigationListeners() {
-        // Profile image click to navigate to profile
-        val ivProfile: ImageView = findViewById(R.id.iv_profile)
-        ivProfile.setOnClickListener {
-            val intent = Intent(this, ProfileActivity::class.java)
-            startActivity(intent)
+    private fun setupListeners() {
+        // Get current lesson for navigation
+        val currentLesson = viewModel.getCurrentLesson()
+
+        // Navigation listeners
+        binding.ivProfile.setOnClickListener {
+            navigateToActivity(ProfileActivity::class.java)
         }
 
-        // Add click listener for course progress (needs to be added to layout)
-        // For now let's assume you have a button or card that leads to course progress
-        val cardNextLesson: CardView = findViewById(R.id.card_next_lesson)
-        cardNextLesson.setOnClickListener {
+        binding.cardNextLesson.setOnClickListener {
             val intent = Intent(this, CourseProgressActivity::class.java)
             intent.putExtra("COURSE_NAME", "Football Basics")
             startActivity(intent)
         }
 
-        // Add community navigation (needs to be added to layout)
-        // For demonstration, you could add this to your navigation menu or as a button
-        // For example:
-        /*
-        val btnCommunity: Button = findViewById(R.id.btn_community)
-        btnCommunity.setOnClickListener {
-            val intent = Intent(this, CommunityActivity::class.java)
-            startActivity(intent)
+        // Interactive element listeners
+        binding.btnStart.setOnClickListener {
+            navigateToLesson(currentLesson.id, currentLesson.title)
         }
-        */
+
+        binding.cbGoalCompleted.setOnCheckedChangeListener { _, isChecked ->
+            viewModel.setGoalCompleted(isChecked)
+            if (isChecked) {
+                Toast.makeText(this, "Goal completed! Great job!", Toast.LENGTH_SHORT).show()
+            }
+        }
+    }
+
+    private fun navigateToLesson(lessonId: String, lessonTitle: String) {
+        // Create intent to navigate to the lesson
+        val intent = Intent(this, LessonContentActivity::class.java)
+        intent.putExtra("LESSON_ID", lessonId)
+        intent.putExtra("LESSON_TITLE", lessonTitle)
+
+        // Get the correct page based on progress
+        val currentPage = if (viewModel.hasStartedLesson(lessonId)) {
+            viewModel.getLessonProgress(lessonId)
+        } else {
+            1 // Start from the first page
+        }
+
+        intent.putExtra("CURRENT_PAGE", currentPage)
+        intent.putExtra("TOTAL_PAGES", viewModel.getLessonContentSize(lessonId))
+
+        startActivity(intent)
+    }
+
+    private fun navigateToActivity(activityClass: Class<*>, extras: Map<String, Any>? = null) {
+        val intent = Intent(this, activityClass)
+        extras?.forEach { (key, value) ->
+            when (value) {
+                is String -> intent.putExtra(key, value)
+                is Int -> intent.putExtra(key, value)
+                is Boolean -> intent.putExtra(key, value)
+                // Add other types as needed
+            }
+        }
+        startActivity(intent)
     }
 }
