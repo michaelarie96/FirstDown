@@ -60,4 +60,8 @@ dependencies {
     // ImageLoader
     implementation (libs.glide)
 
+    // Navigation Component
+    implementation (libs.androidx.navigation.fragment.ktx)
+    implementation (libs.androidx.navigation.ui.ktx)
+
 }

@@ -1,22 +1,25 @@
-package com.example.firstdown
+package com.example.firstdown.fragments
 
 import android.os.Bundle
 import android.text.Editable
 import android.text.TextWatcher
+import android.view.LayoutInflater
 import android.view.View
+import android.view.ViewGroup
 import android.widget.Toast
-import androidx.activity.viewModels
-import androidx.appcompat.app.AppCompatActivity
+import androidx.fragment.app.Fragment
+import androidx.fragment.app.viewModels
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.example.firstdown.adapters.PostAdapter
-import com.example.firstdown.databinding.ActivityCommunityBinding
+import com.example.firstdown.databinding.FragmentCommunityBinding
 import com.example.firstdown.model.Post
 import com.example.firstdown.viewmodel.CommunityViewModel
 import com.google.android.material.tabs.TabLayout
 
-class CommunityActivity : AppCompatActivity(), PostAdapter.PostInteractionListener {
+class CommunityFragment : Fragment(), PostAdapter.PostInteractionListener {
 
-    private lateinit var binding: ActivityCommunityBinding
+    private var _binding: FragmentCommunityBinding? = null
+    private val binding get() = _binding!!
     private val viewModel: CommunityViewModel by viewModels()
     private lateinit var postAdapter: PostAdapter
 
@@ -24,11 +27,17 @@ class CommunityActivity : AppCompatActivity(), PostAdapter.PostInteractionListen
     private var currentTabPosition = 0
     private var currentSearchQuery = ""
 
-    override fun onCreate(savedInstanceState: Bundle?) {
-        super.onCreate(savedInstanceState)
-        binding = ActivityCommunityBinding.inflate(layoutInflater)
-        setContentView(binding.root)
+    override fun onCreateView(
+        inflater: LayoutInflater,
+        container: ViewGroup?,
+        savedInstanceState: Bundle?
+    ): View {
+        _binding = FragmentCommunityBinding.inflate(inflater, container, false)
+        return binding.root
+    }
 
+    override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
+        super.onViewCreated(view, savedInstanceState)
         setupUI()
         setupListeners()
         displayPosts()
@@ -48,7 +57,7 @@ class CommunityActivity : AppCompatActivity(), PostAdapter.PostInteractionListen
 
         // Set up RecyclerView
         binding.rvPosts.apply {
-            layoutManager = LinearLayoutManager(this@CommunityActivity)
+            layoutManager = LinearLayoutManager(requireContext())
             adapter = postAdapter
             setHasFixedSize(true) // Optimization if items have fixed size
         }
@@ -81,8 +90,8 @@ class CommunityActivity : AppCompatActivity(), PostAdapter.PostInteractionListen
 
         // New post button
         binding.fabNewPost.setOnClickListener {
-            // Handle new post creation (to be implemented later)
-            Toast.makeText(this, "New post feature coming soon!", Toast.LENGTH_SHORT).show()
+            // This would navigate to a new post creation screen in the future
+            Toast.makeText(requireContext(), "New post feature coming soon!", Toast.LENGTH_SHORT).show()
         }
     }
 
@@ -118,23 +127,27 @@ class CommunityActivity : AppCompatActivity(), PostAdapter.PostInteractionListen
         }
     }
 
-    // PostInteractionListener implementation
     override fun onLikeClicked(post: Post, position: Int) {
         // Update like count through ViewModel
         val updatedLikes = viewModel.toggleLike(post.id)
-        Toast.makeText(this, "Liked! Total likes: $updatedLikes", Toast.LENGTH_SHORT).show()
+        Toast.makeText(requireContext(), "Liked! Total likes: $updatedLikes", Toast.LENGTH_SHORT).show()
 
-        // Refresh the post list (in a real app, you'd update just the changed item)
+        // Refresh the post list
         displayPosts()
     }
 
     override fun onCommentClicked(post: Post, position: Int) {
-        // Navigate to comments screen or show comments dialog
-        Toast.makeText(this, "Comments feature coming soon!", Toast.LENGTH_SHORT).show()
+        // In the future, this would navigate to a comment screen or show a comment dialog
+        Toast.makeText(requireContext(), "Comments feature coming soon!", Toast.LENGTH_SHORT).show()
     }
 
     override fun onBookmarkClicked(post: Post, position: Int) {
         // Handle bookmark/save functionality
-        Toast.makeText(this, "Post saved!", Toast.LENGTH_SHORT).show()
+        Toast.makeText(requireContext(), "Post saved!", Toast.LENGTH_SHORT).show()
+    }
+
+    override fun onDestroyView() {
+        super.onDestroyView()
+        _binding = null
     }
 }

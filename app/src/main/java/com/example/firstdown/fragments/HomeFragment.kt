@@ -1,28 +1,51 @@
-package com.example.firstdown
+package com.example.firstdown.fragments
 
 import android.content.Intent
 import android.os.Bundle
+import android.view.LayoutInflater
+import android.view.View
+import android.view.ViewGroup
 import android.widget.Toast
-import androidx.appcompat.app.AppCompatActivity
-import androidx.activity.viewModels
-import com.example.firstdown.databinding.ActivityMainBinding
+import androidx.fragment.app.Fragment
+import androidx.fragment.app.viewModels
+import com.example.firstdown.R
+import com.example.firstdown.databinding.FragmentHomeBinding
 import com.example.firstdown.viewmodel.MainViewModel
+import androidx.navigation.fragment.findNavController
+import com.example.firstdown.LessonContentActivity
 
-class MainActivity : AppCompatActivity() {
+class HomeFragment : Fragment() {
 
-    private lateinit var binding: ActivityMainBinding
+    private var _binding: FragmentHomeBinding? = null
+    private val binding get() = _binding!!
     private val viewModel: MainViewModel by viewModels()
+    private var isNewUser = false
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        binding = ActivityMainBinding.inflate(layoutInflater)
-        setContentView(binding.root)
+        arguments?.let {
+            isNewUser = it.getBoolean("IS_NEW_USER", false)
+        }
+    }
+
+    override fun onCreateView(
+        inflater: LayoutInflater,
+        container: ViewGroup?,
+        savedInstanceState: Bundle?
+    ): View {
+        _binding = FragmentHomeBinding.inflate(inflater, container, false)
+        return binding.root
+    }
+
+    override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
+        super.onViewCreated(view, savedInstanceState)
 
         setupUI()
         setupListeners()
     }
 
     private fun setupUI() {
+        // Move UI setup code from MainActivity here
         // Get data from ViewModel
         val currentUser = viewModel.getCurrentUser()
         val currentLesson = viewModel.getCurrentLesson()
@@ -38,17 +61,17 @@ class MainActivity : AppCompatActivity() {
         binding.tvLessonDuration.text = getString(R.string.min_lesson, currentLesson.durationMinutes)
 
         // Set up button text based on lesson progress
-        updateStartButtonText(currentLesson.id)
+        updateStartButtonText()
 
         // Set up checkbox state
         binding.cbGoalCompleted.isChecked = viewModel.isGoalCompleted()
     }
 
-    private fun updateStartButtonText(lessonId: String) {
-        if (viewModel.hasStartedLesson(lessonId)) {
-            binding.btnStart.text = getString(R.string.continue_str)
+    private fun updateStartButtonText() {
+        if (isNewUser) {
+            binding.btnStart.text = getString(R.string.start_learning)
         } else {
-            binding.btnStart.text = getString(R.string.start_str)
+            binding.btnStart.text = getString(R.string.continue_learning)
         }
     }
 
@@ -58,13 +81,8 @@ class MainActivity : AppCompatActivity() {
 
         // Navigation listeners
         binding.ivProfile.setOnClickListener {
-            navigateToActivity(ProfileActivity::class.java)
-        }
-
-        binding.cardNextLesson.setOnClickListener {
-            val intent = Intent(this, CourseProgressActivity::class.java)
-            intent.putExtra("COURSE_NAME", "Football Basics")
-            startActivity(intent)
+            // In fragments, we use Navigation Component to navigate
+            findNavController().navigate(R.id.navigation_profile)
         }
 
         // Interactive element listeners
@@ -75,14 +93,17 @@ class MainActivity : AppCompatActivity() {
         binding.cbGoalCompleted.setOnCheckedChangeListener { _, isChecked ->
             viewModel.setGoalCompleted(isChecked)
             if (isChecked) {
-                Toast.makeText(this, "Goal completed! Great job!", Toast.LENGTH_SHORT).show()
+                Toast.makeText(requireContext(), "Goal completed! Great job!", Toast.LENGTH_SHORT).show()
             }
         }
     }
 
     private fun navigateToLesson(lessonId: String, lessonTitle: String) {
-        // Create intent to navigate to the lesson
-        val intent = Intent(this, LessonContentActivity::class.java)
+        // TODO: In the future, this will navigate to a LessonContentFragment
+        //       using the Navigation Component instead of an Intent
+
+        // For now, use Activity navigation
+        val intent = Intent(requireContext(), LessonContentActivity::class.java)
         intent.putExtra("LESSON_ID", lessonId)
         intent.putExtra("LESSON_TITLE", lessonTitle)
 
@@ -99,16 +120,8 @@ class MainActivity : AppCompatActivity() {
         startActivity(intent)
     }
 
-    private fun navigateToActivity(activityClass: Class<*>, extras: Map<String, Any>? = null) {
-        val intent = Intent(this, activityClass)
-        extras?.forEach { (key, value) ->
-            when (value) {
-                is String -> intent.putExtra(key, value)
-                is Int -> intent.putExtra(key, value)
-                is Boolean -> intent.putExtra(key, value)
-                // Add other types as needed
-            }
-        }
-        startActivity(intent)
+    override fun onDestroyView() {
+        super.onDestroyView()
+        _binding = null
     }
 }
