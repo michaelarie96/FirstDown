@@ -16,15 +16,6 @@
             android:name=".HomeActivity"
             android:exported="false" />
         <activity
-            android:name=".QuizActivity"
-            android:exported="false" />
-        <activity
-            android:name=".LessonContentActivity"
-            android:exported="false" />
-        <activity
-            android:name=".CourseProgressActivity"
-            android:exported="false" />
-        <activity
             android:name=".WelcomeActivity"
             android:exported="true">
             <intent-filter>

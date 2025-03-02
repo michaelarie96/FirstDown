@@ -7,5 +7,6 @@ data class Chapter(
     val lessons: List<Lesson>,
     val progress: Int, // 0-100
     val isLocked: Boolean,
-    val requiredChapterIds: List<String> = emptyList()
+    val requiredChapterIds: List<String> = emptyList(),
+    val quizCompleted: Boolean = false
 )

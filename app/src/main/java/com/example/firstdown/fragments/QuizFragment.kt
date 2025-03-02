@@ -1,18 +1,25 @@
-package com.example.firstdown
+package com.example.firstdown.fragments
 
 import android.os.Bundle
+import android.view.LayoutInflater
+import android.view.View
+import android.view.ViewGroup
 import android.widget.RadioButton
 import android.widget.Toast
-import androidx.activity.viewModels
-import androidx.appcompat.app.AppCompatActivity
-import com.example.firstdown.databinding.ActivityQuizBinding
+import androidx.fragment.app.Fragment
+import androidx.fragment.app.viewModels
+import androidx.navigation.fragment.findNavController
+import androidx.navigation.fragment.navArgs
+import com.example.firstdown.databinding.FragmentQuizBinding
 import com.example.firstdown.model.Quiz
 import com.example.firstdown.viewmodel.QuizViewModel
 
-class QuizActivity : AppCompatActivity() {
+class QuizFragment : Fragment() {
 
-    private lateinit var binding: ActivityQuizBinding
+    private var _binding: FragmentQuizBinding? = null
+    private val binding get() = _binding!!
     private val viewModel: QuizViewModel by viewModels()
+    private val args: QuizFragmentArgs by navArgs()
 
     private lateinit var lessonId: String
     private lateinit var lessonTitle: String
@@ -20,28 +27,31 @@ class QuizActivity : AppCompatActivity() {
     private var totalQuizzes: Int = 0
     private var selectedAnswerIndex: Int = -1
 
-    override fun onCreate(savedInstanceState: Bundle?) {
-        super.onCreate(savedInstanceState)
-        binding = ActivityQuizBinding.inflate(layoutInflater)
-        setContentView(binding.root)
+    override fun onCreateView(
+        inflater: LayoutInflater,
+        container: ViewGroup?,
+        savedInstanceState: Bundle?
+    ): View {
+        _binding = FragmentQuizBinding.inflate(inflater, container, false)
+        return binding.root
+    }
 
-        // Setup UI
+    override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
+        super.onViewCreated(view, savedInstanceState)
+
         setupUI()
 
-        // Setup listeners
         setupListeners()
     }
 
     private fun setupUI() {
-        // Extract data from intent
-        lessonId = intent.getStringExtra("LESSON_ID") ?: ""
-        lessonTitle = intent.getStringExtra("LESSON_TITLE") ?: "Quiz"
+        // Extract data from arguments
+        lessonId = args.lessonId
+        lessonTitle = args.lessonTitle
+        currentQuizIndex = args.quizIndex
 
         // Get total number of quizzes
         totalQuizzes = viewModel.getTotalQuizCount(lessonId)
-
-        // Set current quiz index (default to 0)
-        currentQuizIndex = intent.getIntExtra("QUIZ_INDEX", 0)
 
         // Set quiz title and progress
         binding.tvBackToLesson.text = "Back to $lessonTitle"
@@ -76,8 +86,8 @@ class QuizActivity : AppCompatActivity() {
             setupQuizOptions(currentQuiz)
         } else {
             // Handle case where quiz couldn't be loaded
-            Toast.makeText(this, "Could not load quiz", Toast.LENGTH_SHORT).show()
-            finish()
+            Toast.makeText(requireContext(), "Could not load quiz", Toast.LENGTH_SHORT).show()
+            findNavController().navigateUp()
         }
     }
 
@@ -95,6 +105,7 @@ class QuizActivity : AppCompatActivity() {
             if (index < radioButtons.size) {
                 radioButtons[index].text = option
                 radioButtons[index].isEnabled = true
+                radioButtons[index].visibility = View.VISIBLE
             }
         }
 
@@ -102,7 +113,7 @@ class QuizActivity : AppCompatActivity() {
         if (quiz.options.size < radioButtons.size) {
             for (i in quiz.options.size until radioButtons.size) {
                 radioButtons[i].isEnabled = false
-                radioButtons[i].visibility = RadioButton.GONE
+                radioButtons[i].visibility = View.GONE
             }
         }
     }
@@ -110,16 +121,16 @@ class QuizActivity : AppCompatActivity() {
     private fun setupListeners() {
         // Back button
         binding.btnBack.setOnClickListener {
-            finish()
+            findNavController().navigateUp()
         }
 
         // Radio group listener
         binding.radioGroup.setOnCheckedChangeListener { group, checkedId ->
             when (checkedId) {
-                R.id.radio_option1 -> selectedAnswerIndex = 0
-                R.id.radio_option2 -> selectedAnswerIndex = 1
-                R.id.radio_option3 -> selectedAnswerIndex = 2
-                R.id.radio_option4 -> selectedAnswerIndex = 3
+                binding.radioOption1.id -> selectedAnswerIndex = 0
+                binding.radioOption2.id -> selectedAnswerIndex = 1
+                binding.radioOption3.id -> selectedAnswerIndex = 2
+                binding.radioOption4.id -> selectedAnswerIndex = 3
             }
 
             // Enable submit button when an option is selected
@@ -131,7 +142,7 @@ class QuizActivity : AppCompatActivity() {
             if (selectedAnswerIndex != -1) {
                 handleAnswerSubmission()
             } else {
-                Toast.makeText(this, "Please select an answer", Toast.LENGTH_SHORT).show()
+                Toast.makeText(requireContext(), "Please select an answer", Toast.LENGTH_SHORT).show()
             }
         }
     }
@@ -142,28 +153,28 @@ class QuizActivity : AppCompatActivity() {
 
         // Show feedback
         val feedbackMessage = if (isCorrect) "Correct!" else "Incorrect!"
-        Toast.makeText(this, feedbackMessage, Toast.LENGTH_SHORT).show()
+        Toast.makeText(requireContext(), feedbackMessage, Toast.LENGTH_SHORT).show()
 
         // Get current quiz for explanation
         val currentQuiz = viewModel.getQuizByIndex(lessonId, currentQuizIndex)
 
-        // You could display an explanation here if desired
-        // binding.tvExplanation.text = currentQuiz?.explanation
-        // binding.tvExplanation.visibility = View.VISIBLE
-
         // Move to next question or finish quiz
         if (viewModel.isLastQuiz(lessonId, currentQuizIndex)) {
             // This was the last question, show completion message
-            Toast.makeText(this, "Quiz completed!", Toast.LENGTH_LONG).show()
+            Toast.makeText(requireContext(), "Quiz completed!", Toast.LENGTH_LONG).show()
 
-            // Return to lesson or show results
-            // You could navigate to a results screen here
-            finish()
+            // Return to previous screen or navigate to results
+            findNavController().navigateUp()
         } else {
             // Move to next question
             currentQuizIndex++
             updateProgressIndicators()
             displayCurrentQuiz()
         }
+    }
+
+    override fun onDestroyView() {
+        super.onDestroyView()
+        _binding = null
     }
 }

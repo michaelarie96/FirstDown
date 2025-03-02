@@ -1,6 +1,5 @@
 package com.example.firstdown.fragments
 
-import android.content.Intent
 import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
@@ -8,11 +7,11 @@ import android.view.ViewGroup
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.viewModels
 import androidx.recyclerview.widget.LinearLayoutManager
-import com.example.firstdown.CourseProgressActivity
 import com.example.firstdown.adapters.CourseAdapter
 import com.example.firstdown.databinding.FragmentCoursesBinding
 import com.example.firstdown.model.Course
 import com.example.firstdown.viewmodel.CoursesViewModel
+import androidx.navigation.fragment.findNavController
 
 class CoursesFragment : Fragment(), CourseAdapter.OnCourseClickListener {
 
@@ -56,13 +55,9 @@ class CoursesFragment : Fragment(), CourseAdapter.OnCourseClickListener {
 
     // Handle course click events
     override fun onCourseClick(course: Course) {
-        // TODO: In the future, this will navigate to a CourseProgressFragment
-
-        // For now, use Activity navigation
-        val intent = Intent(requireContext(), CourseProgressActivity::class.java)
-        intent.putExtra("COURSE_ID", course.id)
-        intent.putExtra("COURSE_NAME", course.title)
-        startActivity(intent)
+        // Navigate to CourseProgressFragment using SafeArgs
+        val action = CoursesFragmentDirections.actionNavigationCoursesToCourseProgressFragment(course.id)
+        findNavController().navigate(action)
     }
 
     override fun onDestroyView() {

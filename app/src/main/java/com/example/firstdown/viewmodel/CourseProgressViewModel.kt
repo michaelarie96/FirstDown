@@ -1,4 +1,3 @@
-// File: app/src/main/java/com/example/firstdown/viewmodel/CourseProgressViewModel.kt
 package com.example.firstdown.viewmodel
 
 import androidx.lifecycle.ViewModel
@@ -27,5 +26,13 @@ class CourseProgressViewModel : ViewModel() {
     // Get the first lesson from a chapter
     fun getFirstLesson(chapter: Chapter): Lesson? {
         return if (chapter.lessons.isNotEmpty()) chapter.lessons.first() else null
+    }
+
+    fun getNextLesson(chapter: Chapter): Lesson? {
+        // Find the first incomplete lesson in the chapter
+        return chapter.lessons.firstOrNull { lesson ->
+            val progress = DataManager.getLessonProgress(lesson.id)
+            progress < lesson.content.size
+        } ?: chapter.lessons.firstOrNull() // If all are complete, return the first lesson
     }
 }
