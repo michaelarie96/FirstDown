@@ -52,7 +52,7 @@ class DataManager {
                 id = "basic-rules",
                 title = "Basic Rules",
                 description = "Learn the fundamental rules of American Football",
-                lessons = lessons.subList(0, 5),
+                lessons = if (lessons.size >= 5) lessons.subList(0, 5) else lessons,
                 progress = 80, // 4/5 complete
                 isLocked = false
             ),

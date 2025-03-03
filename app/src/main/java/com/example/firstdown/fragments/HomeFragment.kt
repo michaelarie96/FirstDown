@@ -19,11 +19,8 @@ class HomeFragment : Fragment() {
     private val viewModel: MainViewModel by viewModels()
     private var isNewUser = false
 
-    override fun onCreate(savedInstanceState: Bundle?) {
-        super.onCreate(savedInstanceState)
-        arguments?.let {
-            isNewUser = it.getBoolean("IS_NEW_USER", false)
-        }
+    companion object {
+        var isNewUserStatic: Boolean = false
     }
 
     override fun onCreateView(
@@ -38,12 +35,14 @@ class HomeFragment : Fragment() {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
+        // Use the static variable instead of the argument bundle
+        isNewUser = isNewUserStatic
+
         setupUI()
         setupListeners()
     }
 
     private fun setupUI() {
-        // Move UI setup code from MainActivity here
         // Get data from ViewModel
         val currentUser = viewModel.getCurrentUser()
         val currentLesson = viewModel.getCurrentLesson()
