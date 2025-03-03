@@ -1,0 +1,118 @@
+<?xml version="1.0" encoding="utf-8"?>
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="300dp"
+    android:height="200dp"
+    android:viewportWidth="300"
+    android:viewportHeight="200">
+
+    <!-- Playbook background - chalkboard/dark background -->
+    <path
+        android:fillColor="#2D3748"
+        android:pathData="M0,0h300v200h-300z" />
+
+    <!-- Horizontal grid lines -->
+    <path
+        android:pathData="M0,40h300"
+        android:strokeWidth="0.5"
+        android:strokeColor="#4A5568" />
+    <path
+        android:pathData="M0,80h300"
+        android:strokeWidth="0.5"
+        android:strokeColor="#4A5568" />
+    <path
+        android:pathData="M0,120h300"
+        android:strokeWidth="0.5"
+        android:strokeColor="#4A5568" />
+    <path
+        android:pathData="M0,160h300"
+        android:strokeWidth="0.5"
+        android:strokeColor="#4A5568" />
+
+    <!-- Vertical grid lines -->
+    <path
+        android:pathData="M60,0v200"
+        android:strokeWidth="0.5"
+        android:strokeColor="#4A5568" />
+    <path
+        android:pathData="M120,0v200"
+        android:strokeWidth="0.5"
+        android:strokeColor="#4A5568" />
+    <path
+        android:pathData="M180,0v200"
+        android:strokeWidth="0.5"
+        android:strokeColor="#4A5568" />
+    <path
+        android:pathData="M240,0v200"
+        android:strokeWidth="0.5"
+        android:strokeColor="#4A5568" />
+
+    <!-- Play diagram elements (offensive formation) -->
+    <!-- Center -->
+    <path
+        android:fillColor="#FFFFFF"
+        android:pathData="M150,140m-6,0a6,6 0,1 1,12 0a6,6 0,1 1,-12 0" />
+
+    <!-- Offensive line -->
+    <path
+        android:fillColor="#FFFFFF"
+        android:pathData="M130,140m-6,0a6,6 0,1 1,12 0a6,6 0,1 1,-12 0" />
+    <path
+        android:fillColor="#FFFFFF"
+        android:pathData="M110,140m-6,0a6,6 0,1 1,12 0a6,6 0,1 1,-12 0" />
+    <path
+        android:fillColor="#FFFFFF"
+        android:pathData="M170,140m-6,0a6,6 0,1 1,12 0a6,6 0,1 1,-12 0" />
+    <path
+        android:fillColor="#FFFFFF"
+        android:pathData="M190,140m-6,0a6,6 0,1 1,12 0a6,6 0,1 1,-12 0" />
+
+    <!-- Quarterback -->
+    <path
+        android:fillColor="#4299E1"
+        android:pathData="M150,170m-6,0a6,6 0,1 1,12 0a6,6 0,1 1,-12 0" />
+
+    <!-- Receivers -->
+    <path
+        android:fillColor="#4299E1"
+        android:pathData="M70,120m-6,0a6,6 0,1 1,12 0a6,6 0,1 1,-12 0" />
+    <path
+        android:fillColor="#4299E1"
+        android:pathData="M230,120m-6,0a6,6 0,1 1,12 0a6,6 0,1 1,-12 0" />
+
+    <!-- Running backs -->
+    <path
+        android:fillColor="#4299E1"
+        android:pathData="M130,170m-6,0a6,6 0,1 1,12 0a6,6 0,1 1,-12 0" />
+    <path
+        android:fillColor="#4299E1"
+        android:pathData="M170,170m-6,0a6,6 0,1 1,12 0a6,6 0,1 1,-12 0" />
+
+    <!-- Route paths - arrows to show player movement -->
+    <path
+        android:pathData="M70,120L70,80"
+        android:strokeWidth="2"
+        android:strokeColor="#FFD700" />
+    <path
+        android:pathData="M70,80L100,60"
+        android:strokeWidth="2"
+        android:strokeColor="#FFD700" />
+
+    <path
+        android:pathData="M230,120L230,80"
+        android:strokeWidth="2"
+        android:strokeColor="#FFD700" />
+    <path
+        android:pathData="M230,80L200,60"
+        android:strokeWidth="2"
+        android:strokeColor="#FFD700" />
+
+    <path
+        android:pathData="M130,170C130,150 100,130 80,130"
+        android:strokeWidth="2"
+        android:strokeColor="#FFD700" />
+
+    <path
+        android:pathData="M170,170C170,150 200,130 220,130"
+        android:strokeWidth="2"
+        android:strokeColor="#FFD700" />
+</vector>

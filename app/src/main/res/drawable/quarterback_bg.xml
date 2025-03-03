@@ -1,0 +1,124 @@
+<?xml version="1.0" encoding="utf-8"?>
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="300dp"
+    android:height="200dp"
+    android:viewportWidth="300"
+    android:viewportHeight="200">
+
+    <!-- Sky background gradient -->
+    <path
+        android:fillColor="#1A202C"
+        android:pathData="M0,0h300v200h-300z" />
+
+    <!-- Field background with perspective -->
+    <path
+        android:fillColor="#4CAF50"
+        android:pathData="M0,130l300,-30l0,100l-300,0z" />
+
+    <!-- Field line markings with perspective -->
+    <path
+        android:strokeColor="#FFFFFF"
+        android:strokeWidth="2"
+        android:pathData="M0,130l300,-30" />
+
+    <path
+        android:strokeColor="#FFFFFF"
+        android:strokeWidth="1"
+        android:pathData="M0,145l300,-15" />
+
+    <path
+        android:strokeColor="#FFFFFF"
+        android:strokeWidth="1"
+        android:pathData="M0,160l300,-10" />
+
+    <path
+        android:strokeColor="#FFFFFF"
+        android:strokeWidth="1"
+        android:pathData="M0,175l300,-5" />
+
+    <path
+        android:strokeColor="#FFFFFF"
+        android:strokeWidth="1"
+        android:pathData="M30,130l0,70" />
+
+    <path
+        android:strokeColor="#FFFFFF"
+        android:strokeWidth="1"
+        android:pathData="M90,123l0,77" />
+
+    <path
+        android:strokeColor="#FFFFFF"
+        android:strokeWidth="1"
+        android:pathData="M150,116l0,84" />
+
+    <path
+        android:strokeColor="#FFFFFF"
+        android:strokeWidth="1"
+        android:pathData="M210,109l0,91" />
+
+    <path
+        android:strokeColor="#FFFFFF"
+        android:strokeWidth="1"
+        android:pathData="M270,102l0,98" />
+
+    <!-- Football -->
+    <path
+        android:fillColor="#8B4513"
+        android:pathData="M120,100m-8,0a8,8 0,1 1,16 0a8,8 0,1 1,-16 0" />
+    <path
+        android:strokeColor="#FFFFFF"
+        android:strokeWidth="1"
+        android:pathData="M116,100h8" />
+
+    <!-- Quarterback silhouette -->
+    <path
+        android:fillColor="#1A202C"
+        android:pathData="M150,100c0,0 -5,-15 0,-15s14,0 15,10s0,20 -5,25s-10,5 -15,0s-5,-20 -5,-20z" />
+    <path
+        android:fillColor="#1A202C"
+        android:pathData="M155,95l10,-5l5,5l-5,5z" />
+    <path
+        android:fillColor="#1A202C"
+        android:pathData="M150,120l0,30l10,0l0,-30z" />
+    <path
+        android:fillColor="#1A202C"
+        android:pathData="M160,120l0,30l10,0l0,-30z" />
+
+    <!-- Motion lines to indicate throwing action -->
+    <path
+        android:strokeColor="#FFFFFF"
+        android:strokeWidth="2"
+        android:pathData="M135,90c-10,-5 -15,5 -15,10"
+        android:strokeLineCap="round" />
+    <path
+        android:strokeColor="#FFFFFF"
+        android:strokeWidth="2"
+        android:pathData="M135,85c-15,-5 -20,5 -20,15"
+        android:strokeLineCap="round" />
+
+    <!-- Motion path of football - individual dash segments instead of stroke-dasharray -->
+    <path
+        android:strokeColor="#FFFFFF"
+        android:strokeWidth="1"
+        android:pathData="M150,95l-3,0.5" />
+    <path
+        android:strokeColor="#FFFFFF"
+        android:strokeWidth="1"
+        android:pathData="M144,96l-3,0.5" />
+    <path
+        android:strokeColor="#FFFFFF"
+        android:strokeWidth="1"
+        android:pathData="M138,97l-3,0.5" />
+    <path
+        android:strokeColor="#FFFFFF"
+        android:strokeWidth="1"
+        android:pathData="M132,98l-3,0.5" />
+    <path
+        android:strokeColor="#FFFFFF"
+        android:strokeWidth="1"
+        android:pathData="M126,99l-3,0.5" />
+    <path
+        android:strokeColor="#FFFFFF"
+        android:strokeWidth="1"
+        android:pathData="M120,100l-3,0.5" />
+</vector>

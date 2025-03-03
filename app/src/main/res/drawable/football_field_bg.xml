@@ -1,0 +1,102 @@
+<?xml version="1.0" encoding="utf-8"?>
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="300dp"
+    android:height="200dp"
+    android:viewportWidth="300"
+    android:viewportHeight="200">
+
+    <!-- Field background - grass -->
+    <path
+        android:fillColor="#4CAF50"
+        android:pathData="M0,0h300v200h-300z" />
+
+    <!-- Field markings - yard lines -->
+    <path
+        android:fillColor="#FFFFFF"
+        android:pathData="M30,0v200"
+        android:strokeWidth="1"
+        android:strokeColor="#FFFFFF" />
+
+    <path
+        android:fillColor="#FFFFFF"
+        android:pathData="M60,0v200"
+        android:strokeWidth="1"
+        android:strokeColor="#FFFFFF" />
+
+    <path
+        android:fillColor="#FFFFFF"
+        android:pathData="M90,0v200"
+        android:strokeWidth="1"
+        android:strokeColor="#FFFFFF" />
+
+    <path
+        android:fillColor="#FFFFFF"
+        android:pathData="M120,0v200"
+        android:strokeWidth="1"
+        android:strokeColor="#FFFFFF" />
+
+    <path
+        android:fillColor="#FFFFFF"
+        android:pathData="M150,0v200"
+        android:strokeWidth="1"
+        android:strokeColor="#FFFFFF" />
+
+    <path
+        android:fillColor="#FFFFFF"
+        android:pathData="M180,0v200"
+        android:strokeWidth="1"
+        android:strokeColor="#FFFFFF" />
+
+    <path
+        android:fillColor="#FFFFFF"
+        android:pathData="M210,0v200"
+        android:strokeWidth="1"
+        android:strokeColor="#FFFFFF" />
+
+    <path
+        android:fillColor="#FFFFFF"
+        android:pathData="M240,0v200"
+        android:strokeWidth="1"
+        android:strokeColor="#FFFFFF" />
+
+    <path
+        android:fillColor="#FFFFFF"
+        android:pathData="M270,0v200"
+        android:strokeWidth="1"
+        android:strokeColor="#FFFFFF" />
+
+    <!-- Midfield line - thicker -->
+    <path
+        android:fillColor="#FFFFFF"
+        android:pathData="M150,0v200"
+        android:strokeWidth="2"
+        android:strokeColor="#FFFFFF" />
+
+    <!-- End zones -->
+    <path
+        android:fillColor="#E53935"
+        android:fillAlpha="0.3"
+        android:pathData="M0,0h30v200h-30z" />
+
+    <path
+        android:fillColor="#1565C0"
+        android:fillAlpha="0.3"
+        android:pathData="M270,0h30v200h-30z" />
+
+    <!-- Yard numbers (simplified) -->
+    <path
+        android:fillColor="#FFFFFF"
+        android:pathData="M60,100m-5,0a5,5 0,1 1,10 0a5,5 0,1 1,-10 0" />
+
+    <path
+        android:fillColor="#FFFFFF"
+        android:pathData="M120,100m-5,0a5,5 0,1 1,10 0a5,5 0,1 1,-10 0" />
+
+    <path
+        android:fillColor="#FFFFFF"
+        android:pathData="M180,100m-5,0a5,5 0,1 1,10 0a5,5 0,1 1,-10 0" />
+
+    <path
+        android:fillColor="#FFFFFF"
+        android:pathData="M240,100m-5,0a5,5 0,1 1,10 0a5,5 0,1 1,-10 0" />
+</vector>

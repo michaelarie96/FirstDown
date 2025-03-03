@@ -1,6 +1,5 @@
 package com.example.firstdown.fragments
 
-import android.content.Intent
 import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
@@ -12,7 +11,6 @@ import com.example.firstdown.R
 import com.example.firstdown.databinding.FragmentHomeBinding
 import com.example.firstdown.viewmodel.MainViewModel
 import androidx.navigation.fragment.findNavController
-import com.example.firstdown.LessonContentActivity
 
 class HomeFragment : Fragment() {
 
@@ -99,14 +97,6 @@ class HomeFragment : Fragment() {
     }
 
     private fun navigateToLesson(lessonId: String, lessonTitle: String) {
-        // TODO: In the future, this will navigate to a LessonContentFragment
-        //       using the Navigation Component instead of an Intent
-
-        // For now, use Activity navigation
-        val intent = Intent(requireContext(), LessonContentActivity::class.java)
-        intent.putExtra("LESSON_ID", lessonId)
-        intent.putExtra("LESSON_TITLE", lessonTitle)
-
         // Get the correct page based on progress
         val currentPage = if (viewModel.hasStartedLesson(lessonId)) {
             viewModel.getLessonProgress(lessonId)
@@ -114,10 +104,15 @@ class HomeFragment : Fragment() {
             1 // Start from the first page
         }
 
-        intent.putExtra("CURRENT_PAGE", currentPage)
-        intent.putExtra("TOTAL_PAGES", viewModel.getLessonContentSize(lessonId))
-
-        startActivity(intent)
+        // Use Navigation Component to navigate to the LessonContentFragment
+        val totalPages = viewModel.getLessonContentSize(lessonId)
+        val action = HomeFragmentDirections.actionNavigationHomeToLessonContentFragment(
+            lessonId = lessonId,
+            lessonTitle = lessonTitle,
+            currentPage = currentPage,
+            totalPages = totalPages
+        )
+        findNavController().navigate(action)
     }
 
     override fun onDestroyView() {
