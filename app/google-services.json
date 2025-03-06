@@ -1,0 +1,47 @@
+{
+  "project_info": {
+    "project_number": "336557717974",
+    "project_id": "firstdownapp-504a5",
+    "storage_bucket": "firstdownapp-504a5.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:336557717974:android:628e0cf92fac803c290c77",
+        "android_client_info": {
+          "package_name": "com.example.firstdown"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "336557717974-sr9jdu9i24kksp0o64hs5u26aa2ki2qh.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.example.firstdown",
+            "certificate_hash": "872eb1daf9e785e39ed332590f27a4a5dc770f68"
+          }
+        },
+        {
+          "client_id": "336557717974-a84tq2s2306tmq6821189ubor8btltmo.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyAT1sI0HFXZuqxEiwQFO_HgwxIK_-AVGko"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "336557717974-a84tq2s2306tmq6821189ubor8btltmo.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

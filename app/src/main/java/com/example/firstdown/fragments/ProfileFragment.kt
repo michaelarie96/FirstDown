@@ -1,13 +1,18 @@
 package com.example.firstdown.fragments
 
+import android.content.Intent
 import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.widget.PopupMenu
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.viewModels
+import com.example.firstdown.R
+import com.example.firstdown.WelcomeActivity
 import com.example.firstdown.databinding.FragmentProfileBinding
 import com.example.firstdown.viewmodel.ProfileViewModel
+import com.google.firebase.auth.FirebaseAuth
 
 class ProfileFragment : Fragment() {
 
@@ -28,6 +33,7 @@ class ProfileFragment : Fragment() {
         super.onViewCreated(view, savedInstanceState)
         setupUI()
         setupListeners()
+        setupSignOut()
     }
 
     private fun setupUI() {
@@ -55,6 +61,36 @@ class ProfileFragment : Fragment() {
                 .setPositiveButton("OK", null)
                 .show()
         }
+    }
+
+    private fun setupSignOut() {
+        binding.btnSettings.setOnClickListener {
+            // Show a popup menu with options
+            val popupMenu = PopupMenu(requireContext(), binding.btnSettings)
+            popupMenu.menuInflater.inflate(R.menu.profile_menu, popupMenu.menu)
+
+            popupMenu.setOnMenuItemClickListener { item ->
+                when (item.itemId) {
+                    R.id.menu_sign_out -> {
+                        signOut()
+                        true
+                    }
+                    else -> false
+                }
+            }
+
+            popupMenu.show()
+        }
+    }
+
+    private fun signOut() {
+        FirebaseAuth.getInstance().signOut()
+
+        // Navigate back to WelcomeActivity
+        val intent = Intent(requireActivity(), WelcomeActivity::class.java)
+        intent.flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
+        startActivity(intent)
+        requireActivity().finish()
     }
 
     override fun onDestroyView() {

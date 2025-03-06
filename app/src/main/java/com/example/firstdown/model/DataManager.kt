@@ -1,6 +1,7 @@
 package com.example.firstdown.model
 
 import com.example.firstdown.R
+import com.google.firebase.auth.FirebaseAuth
 
 class DataManager {
     companion object {
@@ -135,7 +136,30 @@ class DataManager {
         private val startedLessons = mutableSetOf<String>()
 
         // Accessor methods
-        fun getCurrentUser(): User = currentUser
+
+        fun getCurrentUser(): User {
+            // Try to get Firebase user first
+            val firebaseUser = FirebaseAuth.getInstance().currentUser
+
+            if (firebaseUser != null) {
+                // Create a User object with data from Firebase
+                return User(
+                    id = firebaseUser.uid,
+                    name = firebaseUser.displayName ?: "Football Fan",
+                    email = firebaseUser.email ?: "",
+                    // Use default values for app-specific properties
+                    profileImage = firebaseUser.photoUrl?.toString(),
+                    title = "Beginner",
+                    streakDays = 0,
+                    lessonsCompleted = 0,
+                    quizScore = 0,
+                    timeSpent = 0
+                )
+            } else {
+                // Fall back to the default user for development
+                return currentUser
+            }
+        }
 
         fun getCurrentLesson(): Lesson {
             return getLessonById(currentLessonId) ?: lessons.first()
