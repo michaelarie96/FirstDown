@@ -33,7 +33,6 @@ class CourseAdapter(
 
     override fun getItemCount(): Int = courses.size
 
-
     fun updateCourses(newCourses: List<Course>) {
         val oldList = ArrayList(courses)
         val diffResult = DiffUtil.calculateDiff(object : DiffUtil.Callback() {
@@ -57,8 +56,6 @@ class CourseAdapter(
         private val ivCourseImage: ImageView = itemView.findViewById(R.id.iv_course_image)
         private val tvCourseTitle: TextView = itemView.findViewById(R.id.tv_course_title)
         private val tvCourseDescription: TextView = itemView.findViewById(R.id.tv_course_description)
-        private val tvCourseDifficulty: TextView = itemView.findViewById(R.id.tv_course_difficulty)
-        private val tvCourseLength: TextView = itemView.findViewById(R.id.tv_course_length)
         private val progressBar: ProgressBar = itemView.findViewById(R.id.progress_bar)
         private val tvProgress: TextView = itemView.findViewById(R.id.tv_progress)
         private val btnViewCourse: Button = itemView.findViewById(R.id.btn_view_course)
@@ -70,10 +67,6 @@ class CourseAdapter(
             // Set course title and description
             tvCourseTitle.text = course.title
             tvCourseDescription.text = course.description
-
-            // Set course difficulty and length
-            tvCourseDifficulty.text = course.difficulty
-            tvCourseLength.text = "${course.estimatedHours} hours"
 
             // Set progress
             progressBar.progress = course.progress

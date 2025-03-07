@@ -15,15 +15,16 @@
     <string name="continue_learning">Continue Learning</string>
     <string name="min_lesson">%d min lesson</string>
     <string name="latest_achievement">Latest Achievement</string>
-    <string name="earned_days_ago">Earned %d days ago</string>
     <string name="quick_tip">Quick Tip</string>
-    <string name="start_learning">Start Learning</string>
     <string name="completed_str">Completed</string>
     <string name="iv_profile_desc">Profile</string>
     <string name="iv_trophy_desc">Trophy</string>
     <string name="iv_football_desc">Football</string>
     <string name="complete_lesson_goal">Complete %s Module</string>
     <string name="start_str">Start</string>
+    <string name="all_lessons_completed">Congratulations! You\'ve completed all lessons.</string>
+    <string name="earned_days_ago">Earned %d days ago</string>
+    <string name="start_learning">Start Learning</string>
 
     <!-- Progress Screen -->
     <string name="your_progress">Your Progress</string>

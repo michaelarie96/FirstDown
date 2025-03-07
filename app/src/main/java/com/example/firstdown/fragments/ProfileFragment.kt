@@ -50,7 +50,7 @@ class ProfileFragment : Fragment() {
 
         // Set up statistics
         binding.tvLessonsCount.text = currentUser.lessonsCompleted.toString()
-        binding.tvScorePercent.text = "${currentUser.quizScore}%"
+        binding.tvScorePercent.text = "${currentUser.averageQuizScore}%"
         binding.tvTimeSpent.text = "${currentUser.timeSpent / 60}h"
     }
 

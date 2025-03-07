@@ -84,15 +84,11 @@
         android:label="Quiz"
         tools:layout="@layout/fragment_quiz">
         <argument
-            android:name="lessonId"
+            android:name="chapterId"
             app:argType="string" />
         <argument
-            android:name="lessonTitle"
+            android:name="chapterTitle"
             app:argType="string" />
-        <argument
-            android:name="quizIndex"
-            app:argType="integer"
-            android:defaultValue="0" />
     </fragment>
 
 </navigation>

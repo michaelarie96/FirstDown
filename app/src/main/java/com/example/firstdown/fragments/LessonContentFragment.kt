@@ -4,6 +4,7 @@ import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.widget.Toast
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.viewModels
 import androidx.navigation.fragment.findNavController
@@ -149,12 +150,21 @@ class LessonContentFragment : Fragment() {
     }
 
     private fun navigateToQuiz() {
-        val action = LessonContentFragmentDirections.actionLessonContentFragmentToQuizFragment(
-            lessonId = lessonId,
-            lessonTitle = lessonTitle,
-            quizIndex = 0 // Start with the first quiz
-        )
-        findNavController().navigate(action)
+        // First, we need to find which chapter this lesson belongs to
+        val currentLesson = viewModel.getLessonById(lessonId)
+        val parentChapter = viewModel.getChapterForLesson(lessonId)
+
+        if (parentChapter != null) {
+            // Navigate to the chapter's quiz
+            val action = LessonContentFragmentDirections.actionLessonContentFragmentToQuizFragment(
+                chapterId = parentChapter.id,
+                chapterTitle = parentChapter.title
+            )
+            findNavController().navigate(action)
+        } else {
+            // Handle case where parent chapter couldn't be found
+            Toast.makeText(requireContext(), "Quiz not available", Toast.LENGTH_SHORT).show()
+        }
     }
 
     override fun onDestroyView() {

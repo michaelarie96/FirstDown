@@ -1,6 +1,9 @@
 package com.example.firstdown.viewmodel
 
 import androidx.lifecycle.ViewModel
+import com.example.firstdown.model.Achievement
+import com.example.firstdown.model.Chapter
+import com.example.firstdown.model.Course
 import com.example.firstdown.model.DataManager
 import com.example.firstdown.model.Lesson
 import com.example.firstdown.model.User
@@ -12,9 +15,39 @@ class MainViewModel : ViewModel() {
         return DataManager.getCurrentUser()
     }
 
-    // Get current lesson
-    fun getCurrentLesson(): Lesson {
-        return DataManager.getCurrentLesson()
+    // Get next lesson to complete (for Today's Goal)
+    fun getNextLessonToComplete(): Lesson? {
+        return DataManager.getNextLessonToComplete()
+    }
+
+    // Check if lesson was completed today
+    fun wasLessonCompletedToday(lessonId: String): Boolean {
+        return DataManager.wasLessonCompletedToday(lessonId)
+    }
+
+    // Get current or next chapter to study
+    fun getCurrentOrNextChapter(): Pair<Course, Chapter>? {
+        return DataManager.getCurrentOrNextChapter()
+    }
+
+    // Check if a chapter has been started
+    fun hasStartedChapter(chapterId: String): Boolean {
+        return DataManager.hasStartedChapter(chapterId)
+    }
+
+    // Check if user has started any learning
+    fun hasStartedAnyLearning(): Boolean {
+        return DataManager.hasStartedLearning()
+    }
+
+    // Get the latest achievement
+    fun getLatestAchievement(): Achievement? {
+        return DataManager.getLatestAchievement()
+    }
+
+    // Get a random quick tip
+    fun getRandomQuickTip(): String {
+        return DataManager.getRandomQuickTip()
     }
 
     // Check if lesson has started
@@ -25,16 +58,6 @@ class MainViewModel : ViewModel() {
     // Get lesson progress
     fun getLessonProgress(lessonId: String): Int {
         return DataManager.getLessonProgress(lessonId)
-    }
-
-    // Update goal completion status
-    fun setGoalCompleted(completed: Boolean) {
-        DataManager.setGoalCompleted(completed)
-    }
-
-    // Check if goal is completed
-    fun isGoalCompleted(): Boolean {
-        return DataManager.isGoalCompleted()
     }
 
     // Get lesson content size

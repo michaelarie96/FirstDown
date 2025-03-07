@@ -5,19 +5,16 @@ data class Course(
     val title: String,
     val description: String,
     val imageResId: Int,
-    val chapters: List<Chapter>,
-    val difficulty: String = "Beginner",
-    val estimatedHours: Int = 0,
-    val isPopular: Boolean = false,
-    val authorName: String = "Football Experts"
+    val chapters: List<Chapter>
 ) {
-    // Calculate overall course progress based on chapter progress
+    // Calculate overall course progress based on completed chapters
     val progress: Int
         get() {
             if (chapters.isEmpty()) return 0
 
-            // Sum up all chapter progress and divide by chapter count
-            return chapters.sumOf { it.progress } / chapters.size
+            // Count completed chapters
+            val completedChapters = chapters.count { it.isCompleted }
+            return (completedChapters * 100) / chapters.size
         }
 
     // Calculate total lessons in the course

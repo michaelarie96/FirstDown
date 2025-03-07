@@ -7,7 +7,7 @@ data class Lesson(
     val iconResId: Int,
     val durationMinutes: Int,
     val content: List<LessonContent>,
-    val quizzes: List<Quiz>
+    val isCompleted: Boolean = false
 )
 
 sealed class LessonContent {

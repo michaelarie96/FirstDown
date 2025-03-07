@@ -1,6 +1,7 @@
 package com.example.firstdown.viewmodel
 
 import androidx.lifecycle.ViewModel
+import com.example.firstdown.model.Chapter
 import com.example.firstdown.model.DataManager
 import com.example.firstdown.model.Lesson
 import com.example.firstdown.model.LessonContent
@@ -41,5 +42,13 @@ class LessonContentViewModel : ViewModel() {
     // Get total pages
     fun getTotalPages(lessonId: String): Int {
         return getLessonById(lessonId)?.content?.size ?: 0
+    }
+
+    // Add this method to LessonContentViewModel
+    fun getChapterForLesson(lessonId: String): Chapter? {
+        // Look through all chapters to find the one containing this lesson
+        return DataManager.getAllChapters().find { chapter ->
+            chapter.lessons.any { it.id == lessonId }
+        }
     }
 }

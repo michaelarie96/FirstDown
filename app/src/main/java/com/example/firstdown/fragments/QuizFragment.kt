@@ -1,3 +1,4 @@
+// app/src/main/java/com/example/firstdown/fragments/QuizFragment.kt
 package com.example.firstdown.fragments
 
 import android.os.Bundle
@@ -21,10 +22,8 @@ class QuizFragment : Fragment() {
     private val viewModel: QuizViewModel by viewModels()
     private val args: QuizFragmentArgs by navArgs()
 
-    private lateinit var lessonId: String
-    private lateinit var lessonTitle: String
-    private var currentQuizIndex: Int = 0
-    private var totalQuizzes: Int = 0
+    private lateinit var chapterId: String
+    private lateinit var chapterTitle: String
     private var selectedAnswerIndex: Int = -1
 
     override fun onCreateView(
@@ -40,50 +39,40 @@ class QuizFragment : Fragment() {
         super.onViewCreated(view, savedInstanceState)
 
         setupUI()
-
         setupListeners()
     }
 
     private fun setupUI() {
         // Extract data from arguments
-        lessonId = args.lessonId
-        lessonTitle = args.lessonTitle
-        currentQuizIndex = args.quizIndex
+        chapterId = args.chapterId
+        chapterTitle = args.chapterTitle
 
-        // Get total number of quizzes
-        totalQuizzes = viewModel.getTotalQuizCount(lessonId)
+        // Set quiz title
+        binding.tvBackToLesson.text = "Back to $chapterTitle"
+        binding.tvQuestionCounter.text = "Quiz"
 
-        // Set quiz title and progress
-        binding.tvBackToLesson.text = "Back to $lessonTitle"
-        updateProgressIndicators()
-
-        // Display current quiz question and options
-        displayCurrentQuiz()
-    }
-
-    private fun updateProgressIndicators() {
-        // Update question counter text
-        binding.tvQuestionCounter.text = "Question ${currentQuizIndex + 1}/$totalQuizzes"
-
-        // Update progress bar
+        // Update progress indicator
         binding.progressBar.max = 100
-        binding.progressBar.progress = ((currentQuizIndex + 1) * 100) / totalQuizzes
+        binding.progressBar.progress = 50  // Since we have a single quiz, show 50% progress
+
+        // Display the quiz
+        displayQuiz()
     }
 
-    private fun displayCurrentQuiz() {
-        // Get the current quiz
-        val currentQuiz = viewModel.getQuizByIndex(lessonId, currentQuizIndex)
+    private fun displayQuiz() {
+        // Get the quiz for this chapter
+        val quiz = viewModel.getQuizForChapter(chapterId)
 
-        if (currentQuiz != null) {
+        if (quiz != null) {
             // Set question text
-            binding.tvQuestion.text = currentQuiz.question
+            binding.tvQuestion.text = quiz.question
 
             // Clear radio group selection
             binding.radioGroup.clearCheck()
             selectedAnswerIndex = -1
 
             // Set up options
-            setupQuizOptions(currentQuiz)
+            setupQuizOptions(quiz)
         } else {
             // Handle case where quiz couldn't be loaded
             Toast.makeText(requireContext(), "Could not load quiz", Toast.LENGTH_SHORT).show()
@@ -149,28 +138,26 @@ class QuizFragment : Fragment() {
 
     private fun handleAnswerSubmission() {
         // Check if answer is correct
-        val isCorrect = viewModel.isAnswerCorrect(lessonId, currentQuizIndex, selectedAnswerIndex)
+        val isCorrect = viewModel.isAnswerCorrect(chapterId, selectedAnswerIndex)
+
+        // Calculate a score (100 for correct, 0 for incorrect)
+        val score = if (isCorrect) 100 else 0
 
         // Show feedback
         val feedbackMessage = if (isCorrect) "Correct!" else "Incorrect!"
         Toast.makeText(requireContext(), feedbackMessage, Toast.LENGTH_SHORT).show()
 
         // Get current quiz for explanation
-        val currentQuiz = viewModel.getQuizByIndex(lessonId, currentQuizIndex)
+        val quiz = viewModel.getQuizForChapter(chapterId)
 
-        // Move to next question or finish quiz
-        if (viewModel.isLastQuiz(lessonId, currentQuizIndex)) {
-            // This was the last question, show completion message
-            Toast.makeText(requireContext(), "Quiz completed!", Toast.LENGTH_LONG).show()
+        // Mark quiz as completed
+        viewModel.markQuizCompleted(chapterId, score)
 
-            // Return to previous screen or navigate to results
-            findNavController().navigateUp()
-        } else {
-            // Move to next question
-            currentQuizIndex++
-            updateProgressIndicators()
-            displayCurrentQuiz()
-        }
+        // Show completion message
+        Toast.makeText(requireContext(), "Quiz completed! Your score: $score%", Toast.LENGTH_LONG).show()
+
+        // Return to previous screen
+        findNavController().navigateUp()
     }
 
     override fun onDestroyView() {

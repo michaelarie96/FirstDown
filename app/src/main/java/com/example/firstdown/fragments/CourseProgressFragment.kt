@@ -141,16 +141,13 @@ class CourseProgressFragment : Fragment(), ChapterAdapter.ChapterClickListener {
     }
 
     private fun navigateToQuiz(chapter: Chapter) {
-        // Get the first lesson ID in the chapter to associate with quizzes
-        // (assuming quizzes are linked to lessons in data model)
-        val lessonId = chapter.lessons.firstOrNull()?.id ?: return
-
-        val action = CourseProgressFragmentDirections.actionCourseProgressFragmentToQuizFragment(
-            lessonId = lessonId,
-            lessonTitle = chapter.title,
-            quizIndex = 0
-        )
-        findNavController().navigate(action)
+        if (!chapter.isLocked) {
+            val action = CourseProgressFragmentDirections.actionCourseProgressFragmentToQuizFragment(
+                chapterId = chapter.id,
+                chapterTitle = chapter.title
+            )
+            findNavController().navigate(action)
+        }
     }
 
     override fun onDestroyView() {
