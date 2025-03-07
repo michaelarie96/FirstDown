@@ -1,11 +1,15 @@
 package com.example.firstdown.fragments
 
+import android.app.Activity
 import android.content.Intent
 import android.os.Bundle
+import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.PopupMenu
+import android.widget.Toast
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.viewModels
 import com.example.firstdown.R
@@ -63,6 +67,14 @@ class ProfileFragment : Fragment() {
         }
     }
 
+    private val startForWelcomeActivity = registerForActivityResult(
+        ActivityResultContracts.StartActivityForResult()
+    ) { result ->
+        if (result.resultCode == Activity.RESULT_OK) {
+            Toast.makeText(requireContext(), "Signed out successfully!", Toast.LENGTH_SHORT).show()
+        }
+    }
+
     private fun setupSignOut() {
         binding.btnSettings.setOnClickListener {
             // Show a popup menu with options
@@ -85,12 +97,10 @@ class ProfileFragment : Fragment() {
 
     private fun signOut() {
         FirebaseAuth.getInstance().signOut()
-
+        Log.d("ProfileFragment", "signOut: User signed out.")
         // Navigate back to WelcomeActivity
         val intent = Intent(requireActivity(), WelcomeActivity::class.java)
-        intent.flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
-        startActivity(intent)
-        requireActivity().finish()
+        startForWelcomeActivity.launch(intent)
     }
 
     override fun onDestroyView() {

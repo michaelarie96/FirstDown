@@ -2,6 +2,8 @@ package com.example.firstdown
 
 import android.content.Intent
 import android.os.Bundle
+import android.util.Log
+import android.view.View
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import com.firebase.ui.auth.AuthUI
@@ -13,11 +15,12 @@ import com.example.firstdown.databinding.ActivityLoginBinding
 class LoginActivity : AppCompatActivity() {
 
     private lateinit var binding: ActivityLoginBinding
+    private val TAG = "LoginActivity" // for easier debugging
 
     private val signInLauncher = registerForActivityResult(
         FirebaseAuthUIActivityResultContract()
     ) { result ->
-        this.onSignInResult(result)
+        onSignInResult(result)
     }
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -25,25 +28,22 @@ class LoginActivity : AppCompatActivity() {
         binding = ActivityLoginBinding.inflate(layoutInflater)
         setContentView(binding.root)
 
-        // Check if user is already signed in
-        if (FirebaseAuth.getInstance().currentUser != null) {
-            // User is already signed in, go directly to HomeActivity
+        // Check for existing user *and* if the intent is for sign-in
+        val auth = FirebaseAuth.getInstance()
+        if (auth.currentUser != null) {
             navigateToHome()
         } else {
-            // User is not signed in, start authentication flow
+            //Only start the sign-in flow if the user is not currently signed in.
             startSignIn()
         }
     }
 
     private fun startSignIn() {
-        // Choose authentication providers
         val providers = arrayListOf(
-            AuthUI.IdpConfig.EmailBuilder().build(), // Email authentication
-            AuthUI.IdpConfig.PhoneBuilder().build(), // Phone authentication
-            AuthUI.IdpConfig.GoogleBuilder().build() // Google Sign-In
+            AuthUI.IdpConfig.EmailBuilder().build(),
+            AuthUI.IdpConfig.GoogleBuilder().build()
         )
 
-        // Create and launch sign-in intent
         val signInIntent = AuthUI.getInstance()
             .createSignInIntentBuilder()
             .setAvailableProviders(providers)
@@ -55,31 +55,26 @@ class LoginActivity : AppCompatActivity() {
     }
 
     private fun onSignInResult(result: FirebaseAuthUIAuthenticationResult) {
-        val response = result.idpResponse
-
         if (result.resultCode == RESULT_OK) {
-            // Successfully signed in
             val user = FirebaseAuth.getInstance().currentUser
             Toast.makeText(this, "Welcome ${user?.displayName}", Toast.LENGTH_SHORT).show()
             navigateToHome()
         } else {
-            // Sign in failed
+            val response = result.idpResponse
             if (response == null) {
-                // User cancelled the sign-in flow
                 Toast.makeText(this, "Sign in cancelled", Toast.LENGTH_SHORT).show()
-                finish() // Return to welcome activity
+                finish()
             } else {
-                // Handle error
+                Log.w(TAG, "Sign in error", response.error) // Log the error for debugging
                 Toast.makeText(this, "Sign in failed: ${response.error?.message}", Toast.LENGTH_LONG).show()
             }
         }
     }
-    private fun navigateToHome() {
-        // Set result to OK so WelcomeActivity knows authentication succeeded
-        setResult(RESULT_OK)
 
+    private fun navigateToHome() {
+        setResult(RESULT_OK)
         val intent = Intent(this, HomeActivity::class.java)
         startActivity(intent)
-        finish() // Close this activity
+        finish()
     }
 }

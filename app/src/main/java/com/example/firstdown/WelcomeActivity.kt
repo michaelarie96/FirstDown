@@ -2,6 +2,8 @@ package com.example.firstdown
 
 import android.content.Intent
 import android.os.Bundle
+import android.util.Log
+import android.view.View
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AppCompatActivity
 import com.example.firstdown.databinding.ActivityWelcomeBinding
@@ -23,6 +25,7 @@ class WelcomeActivity : AppCompatActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        Log.d("WelcomeActivity", "onCreate: currentUser = ${FirebaseAuth.getInstance().currentUser}")
 
         // Check if user is already signed in
         if (FirebaseAuth.getInstance().currentUser != null) {
