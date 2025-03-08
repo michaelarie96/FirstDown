@@ -9,6 +9,7 @@ import android.widget.TextView
 import androidx.recyclerview.widget.RecyclerView
 import com.example.firstdown.R
 import com.example.firstdown.model.Chapter
+import com.example.firstdown.model.DataManager
 
 class ChapterAdapter(
     private val chapters: List<Chapter>,
@@ -58,8 +59,8 @@ class ChapterAdapter(
                     }
                     chapter.progress == 100 -> {
                         // All lessons completed
-                        if (chapter.quizCompleted) {
-                            btnAction.text = "Review Chapter"
+                        if (chapter.quizCompleted || DataManager.isQuizCompleted(chapter.id)) {
+                            btnAction.text = "Retake Chapter"
                         } else {
                             btnAction.text = "Start Quiz"
                         }
@@ -87,4 +88,5 @@ class ChapterAdapter(
                 }
             }
         }
-    }}
+    }
+}

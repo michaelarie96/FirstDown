@@ -144,7 +144,7 @@ class LessonFragment : Fragment() {
     private fun setupListeners() {
         // Back button
         binding.btnBack.setOnClickListener {
-            findNavController().navigateUp()
+            findNavController().popBackStack(R.id.ChaptersFragment, false)
         }
 
         // Previous button

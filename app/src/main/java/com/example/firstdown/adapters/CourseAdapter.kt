@@ -11,6 +11,7 @@ import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.RecyclerView
 import com.example.firstdown.R
 import com.example.firstdown.model.Course
+import com.example.firstdown.model.DataManager
 
 class CourseAdapter(
     private var courses: List<Course>,
@@ -68,25 +69,44 @@ class CourseAdapter(
             tvCourseTitle.text = course.title
             tvCourseDescription.text = course.description
 
-            // Set progress
-            progressBar.progress = course.progress
-            tvProgress.text = "${course.progress}% Complete"
+            // Handle locked state
+            val shouldBeLocked = DataManager.shouldCourseBeLocked(course.id)
 
-            // Set button text based on progress
-            if (course.progress > 0) {
-                btnViewCourse.text = "Continue"
+            if (shouldBeLocked) {
+                tvProgress.text = "Locked"
+                btnViewCourse.text = "Complete Previous Courses"
+                // Add lock icon to button
+                btnViewCourse.setCompoundDrawablesWithIntrinsicBounds(R.drawable.ic_lock, 0, 0, 0)
+                btnViewCourse.isEnabled = false
+                // Make progress bar gray
+                progressBar.progress = 0
             } else {
-                btnViewCourse.text = "Start"
+                // Course is unlocked
+                progressBar.progress = course.progress
+                tvProgress.text = "${course.progress}% Complete"
+
+                // Set button text based on progress
+                if (course.progress > 0) {
+                    btnViewCourse.text = "Continue"
+                } else {
+                    btnViewCourse.text = "Start"
+                }
+
+                btnViewCourse.setCompoundDrawablesWithIntrinsicBounds(0, 0, 0, 0)
+                btnViewCourse.isEnabled = true
             }
 
-            // Set click listener for the entire card
+            // Set click listeners
             itemView.setOnClickListener {
-                listener.onCourseClick(course)
+                if (!shouldBeLocked) {
+                    listener.onCourseClick(course)
+                }
             }
 
-            // Set click listener for the button
             btnViewCourse.setOnClickListener {
-                listener.onCourseClick(course)
+                if (!shouldBeLocked) {
+                    listener.onCourseClick(course)
+                }
             }
         }
     }

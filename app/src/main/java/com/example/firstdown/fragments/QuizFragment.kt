@@ -9,6 +9,7 @@ import androidx.fragment.app.Fragment
 import androidx.fragment.app.viewModels
 import androidx.navigation.fragment.findNavController
 import androidx.navigation.fragment.navArgs
+import com.example.firstdown.R
 import com.example.firstdown.databinding.FragmentQuizBinding
 import com.example.firstdown.model.Quiz
 import com.example.firstdown.viewmodel.QuizViewModel
@@ -108,7 +109,7 @@ class QuizFragment : Fragment() {
     private fun setupListeners() {
         // Back button
         binding.btnBack.setOnClickListener {
-            findNavController().navigateUp()
+            findNavController().popBackStack(R.id.ChaptersFragment, false)
         }
 
         // Radio group listener
@@ -151,8 +152,8 @@ class QuizFragment : Fragment() {
         // Show completion message
         Toast.makeText(requireContext(), "Quiz completed! Your score: $score%", Toast.LENGTH_LONG).show()
 
-        // Return to previous screen
-        findNavController().navigateUp()
+        // Return to chapters screen
+        findNavController().popBackStack(R.id.ChaptersFragment, false)
     }
 
     override fun onDestroyView() {

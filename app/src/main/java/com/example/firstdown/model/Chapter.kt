@@ -16,9 +16,9 @@ data class Chapter(
         get() {
             if (lessons.isEmpty()) return 0
 
-            // Count completed lessons
-            val completedLessons = lessons.count { it.isCompleted }
-            return (completedLessons * 100) / lessons.size
+            // Count lessons that are marked as completed in DataManager
+            val completedLessonsCount = lessons.count { DataManager.isLessonCompleted(it.id) }
+            return (completedLessonsCount * 100) / lessons.size
         }
 
     // Chapter is fully completed if all lessons are completed and quiz is completed

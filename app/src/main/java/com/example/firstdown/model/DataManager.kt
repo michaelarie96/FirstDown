@@ -424,16 +424,14 @@ class DataManager {
         private var hasStartedLearning = true
         private var goalCompleted = false
 
-        // Track completed lessons
-        private val completedLessons = mutableSetOf<String>()
-
-        // Track which lessons have been started
         private val startedLessons = mutableSetOf<String>()
-
-        // Track which chapters have been started
         private val startedChapters = mutableSetOf<String>()
 
+        private val completedLessons = mutableSetOf<String>()
         private val completedQuizzes = mutableSetOf<String>()
+        private val completedChapters = mutableSetOf<String>()
+        private val completedCourses = mutableSetOf<String>()
+
 
         private var isProgressLoaded = false
 
@@ -460,6 +458,12 @@ class DataManager {
 
                             completedQuizzes.clear()
                             completedQuizzes.addAll(progress.completedQuizzes)
+
+                            completedChapters.clear()
+                            completedChapters.addAll(progress.completedChapters)
+
+                            completedCourses.clear()
+                            completedCourses.addAll(progress.completedCourses)
 
                             startedLessons.clear()
                             startedLessons.addAll(progress.startedLessons)
@@ -552,16 +556,43 @@ class DataManager {
         fun markQuizCompleted(chapterId: String, score: Int) {
             completedQuizzes.add(chapterId)
 
-            // Save the updated progress to Firestore
-            saveUserProgress()
+            // Get the chapter
+            val chapter = getChapterById(chapterId)
 
-            Log.d("DataManager", "Quiz for chapter $chapterId marked as completed with score $score")
+            // Check if all lessons in chapter are completed
+            if (chapter != null && chapter.lessons.all { completedLessons.contains(it.id) }) {
+                // Mark chapter as completed since all lessons and quiz are done
+                markChapterComplete(chapterId)
+            }
+
+            // Save progress
+            saveUserProgress()
+        }
+
+        fun markChapterComplete(chapterId: String) {
+            completedChapters.add(chapterId)
+
+            // Check if this completes a course
+            val chapter = getChapterById(chapterId)
+            if (chapter != null) {
+                val courseId = chapter.courseId
+                val course = getCourseById(courseId)
+
+                if (course != null && course.chapters.all { completedChapters.contains(it.id) }) {
+                    completedCourses.add(courseId)
+                }
+            }
+
+            // Save progress
+            saveUserProgress()
         }
 
         fun saveUserProgress() {
             FirestoreManager.saveUserProgress(
                 completedLessons = completedLessons,
                 completedQuizzes = completedQuizzes,
+                completedChapters = completedChapters,
+                completedCourses = completedCourses,
                 startedLessons = startedLessons,
                 startedChapters = startedChapters
             )

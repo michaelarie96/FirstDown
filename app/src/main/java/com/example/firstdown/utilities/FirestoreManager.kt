@@ -32,6 +32,8 @@ class FirestoreManager {
         fun saveUserProgress(
             completedLessons: Set<String>,
             completedQuizzes: Set<String>,
+            completedChapters: Set<String>,
+            completedCourses: Set<String>,
             startedLessons: Set<String>,
             startedChapters: Set<String>,
             onSuccess: () -> Unit = {},
@@ -43,6 +45,8 @@ class FirestoreManager {
                 userId = userId,
                 completedLessons = completedLessons.toMutableList(),
                 completedQuizzes = completedQuizzes.toMutableList(),
+                completedChapters = completedChapters.toMutableList(),
+                completedCourses = completedCourses.toMutableList(),
                 startedLessons = startedLessons.toMutableList(),
                 startedChapters = startedChapters.toMutableList(),
                 lastUpdated = System.currentTimeMillis()
