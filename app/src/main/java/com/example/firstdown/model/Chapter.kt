@@ -2,13 +2,15 @@ package com.example.firstdown.model
 
 data class Chapter(
     val id: String,
+    val courseId: String,  // Reference to parent course
     val title: String,
     val description: String,
-    val lessons: List<Lesson>,
+    val lessons: List<Lesson>,  // Ordered list of lessons
     val isLocked: Boolean,
     val requiredChapterIds: List<String> = emptyList(),
     val quiz: Quiz? = null,
-    val quizCompleted: Boolean = false
+    val quizCompleted: Boolean = false,
+    val index: Int              // Position within course
 ) {
     // Calculate progress based on completed lessons
     val progress: Int

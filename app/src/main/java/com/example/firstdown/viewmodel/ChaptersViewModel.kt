@@ -6,7 +6,7 @@ import com.example.firstdown.model.Course
 import com.example.firstdown.model.DataManager
 import com.example.firstdown.model.Lesson
 
-class CourseProgressViewModel : ViewModel() {
+class ChaptersViewModel : ViewModel() {
 
     // Get course by ID
     fun getCourseById(courseId: String): Course? {
@@ -28,11 +28,9 @@ class CourseProgressViewModel : ViewModel() {
         return if (chapter.lessons.isNotEmpty()) chapter.lessons.first() else null
     }
 
+    // Get the next lesson in a chapter
     fun getNextLesson(chapter: Chapter): Lesson? {
         // Find the first incomplete lesson in the chapter
-        return chapter.lessons.firstOrNull { lesson ->
-            val progress = DataManager.getLessonProgress(lesson.id)
-            progress < lesson.content.size
-        } ?: chapter.lessons.firstOrNull() // If all are complete, return the first lesson
+        return DataManager.getNextLessonInChapter(chapter.id)
     }
 }

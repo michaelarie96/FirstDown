@@ -10,29 +10,29 @@ import androidx.navigation.fragment.findNavController
 import androidx.navigation.fragment.navArgs
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.example.firstdown.adapters.ChapterAdapter
-import com.example.firstdown.databinding.FragmentCourseProgressBinding
+import com.example.firstdown.databinding.FragmentChaptersBinding
 import com.example.firstdown.model.Chapter
 import com.example.firstdown.model.Course
 import com.example.firstdown.model.Lesson
-import com.example.firstdown.viewmodel.CourseProgressViewModel
+import com.example.firstdown.viewmodel.ChaptersViewModel
 
-class CourseProgressFragment : Fragment(), ChapterAdapter.ChapterClickListener {
+class ChaptersFragment : Fragment(), ChapterAdapter.ChapterClickListener {
 
-    private var _binding: FragmentCourseProgressBinding? = null
+    private var _binding: FragmentChaptersBinding? = null
     private val binding get() = _binding!!
-    private val viewModel: CourseProgressViewModel by viewModels()
+    private val viewModel: ChaptersViewModel by viewModels()
     private lateinit var chapterAdapter: ChapterAdapter
     private lateinit var course: Course
 
     // Will be used to retrieve arguments passed to the fragment
-    private val args: CourseProgressFragmentArgs by navArgs()
+    private val args: ChaptersFragmentArgs by navArgs()
 
     override fun onCreateView(
         inflater: LayoutInflater,
         container: ViewGroup?,
         savedInstanceState: Bundle?
     ): View {
-        _binding = FragmentCourseProgressBinding.inflate(inflater, container, false)
+        _binding = FragmentChaptersBinding.inflate(inflater, container, false)
         return binding.root
     }
 
@@ -110,11 +110,8 @@ class CourseProgressFragment : Fragment(), ChapterAdapter.ChapterClickListener {
     }
 
     private fun navigateToLesson(lesson: Lesson) {
-        val action = CourseProgressFragmentDirections.actionCourseProgressFragmentToLessonContentFragment(
-            lessonId = lesson.id,
-            lessonTitle = lesson.title,
-            currentPage = 1, // Start at the first page
-            totalPages = lesson.content.size
+        val action = ChaptersFragmentDirections.actionChaptersFragmentToLessonFragment(
+            lessonId = lesson.id
         )
         findNavController().navigate(action)
     }
@@ -142,7 +139,7 @@ class CourseProgressFragment : Fragment(), ChapterAdapter.ChapterClickListener {
 
     private fun navigateToQuiz(chapter: Chapter) {
         if (!chapter.isLocked) {
-            val action = CourseProgressFragmentDirections.actionCourseProgressFragmentToQuizFragment(
+            val action = ChaptersFragmentDirections.actionChaptersFragmentToQuizFragment(
                 chapterId = chapter.id,
                 chapterTitle = chapter.title
             )

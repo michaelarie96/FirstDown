@@ -39,7 +39,6 @@ class ChapterAdapter(
         private val llProgressIndicators: LinearLayout = itemView.findViewById(R.id.ll_progress_indicators)
         private val btnAction: Button = itemView.findViewById(R.id.btn_chapter_action)
 
-        // In ChapterAdapter.kt, update the bind method
         fun bind(chapter: Chapter, listener: ChapterClickListener) {
             tvChapterTitle.text = chapter.title
 
@@ -47,6 +46,7 @@ class ChapterAdapter(
                 tvChapterProgress.text = "Locked"
                 btnAction.text = "Complete Previous Chapters"
                 btnAction.setCompoundDrawablesWithIntrinsicBounds(R.drawable.ic_lock, 0, 0, 0)
+                btnAction.isEnabled = false
             } else {
                 tvChapterProgress.text = "${chapter.progress}% Complete"
 
@@ -69,12 +69,22 @@ class ChapterAdapter(
                         btnAction.text = "Continue Chapter"
                     }
                 }
+
+                btnAction.isEnabled = true
             }
 
             // Set click listener
             btnAction.setOnClickListener {
-                listener.onChapterClicked(chapter)
+                if (!chapter.isLocked) {
+                    listener.onChapterClicked(chapter)
+                }
+            }
+
+            // Set click listener for the entire card
+            itemView.setOnClickListener {
+                if (!chapter.isLocked) {
+                    listener.onChapterClicked(chapter)
+                }
             }
         }
-    }
-}
+    }}

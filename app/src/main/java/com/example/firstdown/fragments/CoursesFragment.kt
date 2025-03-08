@@ -55,8 +55,8 @@ class CoursesFragment : Fragment(), CourseAdapter.OnCourseClickListener {
 
     // Handle course click events
     override fun onCourseClick(course: Course) {
-        // Navigate to CourseProgressFragment using SafeArgs
-        val action = CoursesFragmentDirections.actionNavigationCoursesToCourseProgressFragment(course.id)
+        // Navigate to ChaptersFragment using SafeArgs
+        val action = CoursesFragmentDirections.actionNavigationCoursesToChaptersFragment(course.id)
         findNavController().navigate(action)
     }
 

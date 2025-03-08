@@ -11,8 +11,8 @@
         android:label="Home"
         tools:layout="@layout/fragment_home">
         <action
-            android:id="@+id/action_navigation_home_to_lessonContentFragment"
-            app:destination="@id/lessonContentFragment" />
+            android:id="@+id/action_navigation_home_to_LessonFragment"
+            app:destination="@id/lessonFragment" />
     </fragment>
 
     <fragment
@@ -21,8 +21,8 @@
         android:label="Courses"
         tools:layout="@layout/fragment_courses">
         <action
-            android:id="@+id/action_navigation_courses_to_courseProgressFragment"
-            app:destination="@id/courseProgressFragment" />
+            android:id="@+id/action_navigation_courses_to_ChaptersFragment"
+            app:destination="@id/ChaptersFragment" />
     </fragment>
 
     <fragment
@@ -38,43 +38,35 @@
         tools:layout="@layout/fragment_profile" />
 
     <fragment
-        android:id="@+id/courseProgressFragment"
-        android:name="com.example.firstdown.fragments.CourseProgressFragment"
+        android:id="@+id/ChaptersFragment"
+        android:name="com.example.firstdown.fragments.ChaptersFragment"
         android:label="Course Progress"
-        tools:layout="@layout/fragment_course_progress">
+        tools:layout="@layout/fragment_chapters">
         <argument
             android:name="courseId"
             android:defaultValue=""
             app:argType="string" />
         <action
-            android:id="@+id/action_courseProgressFragment_to_lessonContentFragment"
-            app:destination="@id/lessonContentFragment" />
+            android:id="@+id/action_ChaptersFragment_to_LessonFragment"
+            app:destination="@id/lessonFragment" />
         <action
-            android:id="@+id/action_courseProgressFragment_to_quizFragment"
+            android:id="@+id/action_ChaptersFragment_to_quizFragment"
             app:destination="@id/quizFragment" />
     </fragment>
 
     <fragment
-        android:id="@+id/lessonContentFragment"
-        android:name="com.example.firstdown.fragments.LessonContentFragment"
-        android:label="Lesson Content"
-        tools:layout="@layout/fragment_lesson_content">
+        android:id="@+id/lessonFragment"
+        android:name="com.example.firstdown.fragments.LessonFragment"
+        android:label="Lesson"
+        tools:layout="@layout/fragment_lesson">
         <argument
             android:name="lessonId"
             app:argType="string" />
-        <argument
-            android:name="lessonTitle"
-            app:argType="string" />
-        <argument
-            android:name="currentPage"
-            app:argType="integer"
-            android:defaultValue="1" />
-        <argument
-            android:name="totalPages"
-            app:argType="integer"
-            android:defaultValue="1" />
         <action
-            android:id="@+id/action_lessonContentFragment_to_quizFragment"
+            android:id="@+id/action_lessonFragment_self"
+            app:destination="@id/lessonFragment" />
+        <action
+            android:id="@+id/action_lessonFragment_to_quizFragment"
             app:destination="@id/quizFragment" />
     </fragment>
 

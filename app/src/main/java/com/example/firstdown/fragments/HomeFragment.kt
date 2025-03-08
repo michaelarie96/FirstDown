@@ -163,20 +163,9 @@ class HomeFragment : Fragment() {
     }
 
     private fun navigateToLesson(lessonId: String, lessonTitle: String) {
-        // Get the correct page based on progress
-        val currentPage = if (viewModel.hasStartedLesson(lessonId)) {
-            viewModel.getLessonProgress(lessonId)
-        } else {
-            1 // Start from the first page
-        }
-
-        // Use Navigation Component to navigate to the LessonContentFragment
-        val totalPages = viewModel.getLessonContentSize(lessonId)
-        val action = HomeFragmentDirections.actionNavigationHomeToLessonContentFragment(
-            lessonId = lessonId,
-            lessonTitle = lessonTitle,
-            currentPage = currentPage,
-            totalPages = totalPages
+        // Use Navigation Component to navigate to the LessonFragment
+        val action = HomeFragmentDirections.actionNavigationHomeToLessonFragment(
+            lessonId = lessonId
         )
         findNavController().navigate(action)
     }

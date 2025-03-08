@@ -50,18 +50,23 @@ class MainViewModel : ViewModel() {
         return DataManager.getRandomQuickTip()
     }
 
-    // Check if lesson has started
+    // Check if lesson has been started
     fun hasStartedLesson(lessonId: String): Boolean {
         return DataManager.hasStartedLesson(lessonId)
     }
 
-    // Get lesson progress
-    fun getLessonProgress(lessonId: String): Int {
-        return DataManager.getLessonProgress(lessonId)
+    // Check if lesson is completed
+    fun isLessonCompleted(lessonId: String): Boolean {
+        return DataManager.isLessonCompleted(lessonId)
     }
 
-    // Get lesson content size
-    fun getLessonContentSize(lessonId: String): Int {
-        return DataManager.getLessonById(lessonId)?.content?.size ?: 0
+    // Mark a lesson as completed
+    fun markLessonComplete(lessonId: String) {
+        DataManager.markLessonComplete(lessonId)
+    }
+
+    // Get a lesson by ID
+    fun getLessonById(lessonId: String): Lesson? {
+        return DataManager.getLessonById(lessonId)
     }
 }

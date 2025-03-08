@@ -1,8 +1,8 @@
 package com.example.firstdown.model
 
+import android.util.Log
 import com.example.firstdown.R
 import com.google.firebase.auth.FirebaseAuth
-import java.util.Date
 
 class DataManager {
     companion object {
@@ -34,199 +34,235 @@ class DataManager {
             "Practice ball security with the 5-point contact method"
         )
 
-        // Sample lesson content data
-        private val lessonsContent = mapOf(
-            "downs" to listOf(
-                LessonContent.Text("In American football, a team has four attempts (downs) to advance the ball 10 yards."),
-                LessonContent.Text("If they succeed, they get a new set of downs. If they fail, possession is turned over to the opposing team."),
-                LessonContent.Image(R.drawable.football_field_bg, "Football field showing the yard markers")
-            ),
-            "qb-mechanics" to listOf(
-                LessonContent.Text("The quarterback is the leader of the offense and is responsible for calling plays and executing passes."),
-                LessonContent.Text("Proper stance begins with feet shoulder-width apart, knees slightly bent, and the ball gripped with fingers on the laces."),
-                LessonContent.Image(R.drawable.qb_stance, "Proper quarterback stance"),
-                LessonContent.Text("When throwing, transfer your weight from back foot to front foot while rotating your hips and shoulders toward the target.")
-            ),
-            "formations" to listOf(
-                LessonContent.Text("Formations determine the positioning of players on the field before the snap."),
-                LessonContent.Text("The basic offensive formation is called the 'I Formation', with the quarterback under center, a fullback directly behind, and a running back behind the fullback."),
-                LessonContent.Image(R.drawable.offense_playbook_bg, "I Formation diagram"),
-                LessonContent.Text("Defensive formations are typically named by the number of linemen and linebackers, such as the 4-3 (4 linemen, 3 linebackers) or 3-4 (3 linemen, 4 linebackers).")
-            )
-        )
-
-        // Sample lessons data
+        // Sample lessons data - updated to the new structure
         private val lessons = mapOf(
             "downs" to Lesson(
                 id = "downs",
+                chapterId = "basic-rules",
                 title = "Downs and Distances",
                 description = "Understanding the four downs system",
-                iconResId = R.drawable.ic_football,
+                contentType = ContentType.TEXT,
+                contentData = "In American football, a team has four attempts (downs) to advance the ball 10 yards. If they succeed, they get a new set of downs. If they fail, possession is turned over to the opposing team.",
+                imageResId = R.drawable.football_field_bg,
                 durationMinutes = 15,
-                content = lessonsContent["downs"] ?: emptyList(),
-                isCompleted = true
+                isCompleted = true,
+                index = 0
             ),
             "scoring" to Lesson(
                 id = "scoring",
+                chapterId = "basic-rules",
                 title = "Scoring Methods",
                 description = "Learn different ways to score in football",
-                iconResId = R.drawable.ic_football,
+                contentType = ContentType.TEXT,
+                contentData = "There are multiple ways to score in football including touchdowns (6 points), extra points (1 or 2 points), field goals (3 points), and safeties (2 points).",
+                imageResId = null,
                 durationMinutes = 12,
-                content = listOf(LessonContent.Text("There are multiple ways to score in football...")),
-                isCompleted = true
+                isCompleted = true,
+                index = 1
             ),
             "penalties" to Lesson(
                 id = "penalties",
+                chapterId = "basic-rules",
                 title = "Common Penalties",
                 description = "Understanding flags and penalties",
-                iconResId = R.drawable.ic_flag,
+                contentType = ContentType.TEXT,
+                contentData = "Penalties are called when rules are broken. Common penalties include offside, holding, pass interference, and false start. Most result in yardage penalties.",
+                imageResId = R.drawable.ic_flag,
                 durationMinutes = 20,
-                content = listOf(LessonContent.Text("Penalties are called when rules are broken...")),
-                isCompleted = true
+                isCompleted = true,
+                index = 2
             ),
             "timing" to Lesson(
                 id = "timing",
+                chapterId = "basic-rules",
                 title = "Game Timing",
                 description = "How the game clock works",
-                iconResId = R.drawable.ic_clock,
+                contentType = ContentType.TEXT,
+                contentData = "Football games are divided into four quarters of 15 minutes each. The clock stops for incomplete passes, when a player goes out of bounds, and during timeouts.",
+                imageResId = R.drawable.ic_clock,
                 durationMinutes = 10,
-                content = listOf(LessonContent.Text("Football games are divided into four quarters...")),
-                isCompleted = true
+                isCompleted = true,
+                index = 3
             ),
             "field" to Lesson(
                 id = "field",
+                chapterId = "basic-rules",
                 title = "Field Layout",
                 description = "Understanding the football field",
-                iconResId = R.drawable.ic_football,
+                contentType = ContentType.IMAGE,
+                contentData = "A football field is 100 yards long with 10-yard end zones on each end. The field is marked with yard lines every 5 yards and hash marks to indicate where the ball should be placed.",
+                imageResId = R.drawable.football_field_bg,
                 durationMinutes = 8,
-                content = listOf(LessonContent.Text("A football field is 100 yards long...")),
-                isCompleted = false
+                isCompleted = false,
+                index = 4
             ),
             "offense" to Lesson(
                 id = "offense",
+                chapterId = "player-positions",
                 title = "Offensive Positions",
                 description = "Key offensive player roles",
-                iconResId = R.drawable.ic_football,
+                contentType = ContentType.TEXT,
+                contentData = "The offense consists of various positions including quarterback, running back, wide receiver, tight end, and offensive linemen. Each position has specific responsibilities in moving the ball down the field.",
+                imageResId = null,
                 durationMinutes = 18,
-                content = listOf(LessonContent.Text("The offense consists of various positions...")),
-                isCompleted = true
+                isCompleted = true,
+                index = 0
             ),
             "defense" to Lesson(
                 id = "defense",
+                chapterId = "player-positions",
                 title = "Defensive Positions",
                 description = "Key defensive player roles",
-                iconResId = R.drawable.ic_football,
+                contentType = ContentType.TEXT,
+                contentData = "The defense consists of various positions including defensive linemen, linebackers, cornerbacks, and safeties. Each position has specific responsibilities in stopping the offense.",
+                imageResId = null,
                 durationMinutes = 18,
-                content = listOf(LessonContent.Text("The defense consists of various positions...")),
-                isCompleted = true
+                isCompleted = true,
+                index = 1
             ),
             "special" to Lesson(
                 id = "special",
+                chapterId = "player-positions",
                 title = "Special Teams",
                 description = "Kicking and returning units",
-                iconResId = R.drawable.ic_football,
+                contentType = ContentType.TEXT,
+                contentData = "Special teams handle kicks and punts. These units include kickers, punters, long snappers, and returners, as well as blockers and tacklers.",
+                imageResId = null,
                 durationMinutes = 15,
-                content = listOf(LessonContent.Text("Special teams handle kicks and punts...")),
-                isCompleted = false
+                isCompleted = false,
+                index = 2
             ),
             "qb-mechanics" to Lesson(
                 id = "qb-mechanics",
+                chapterId = "player-positions",
                 title = "Quarterback Mechanics",
                 description = "Learn proper stance and grip",
-                iconResId = R.drawable.ic_football,
+                contentType = ContentType.IMAGE,
+                contentData = "The quarterback is the leader of the offense and is responsible for calling plays and executing passes. Proper stance begins with feet shoulder-width apart, knees slightly bent, and the ball gripped with fingers on the laces.",
+                imageResId = R.drawable.qb_stance,
                 durationMinutes = 20,
-                content = lessonsContent["qb-mechanics"] ?: emptyList(),
-                isCompleted = false
+                isCompleted = false,
+                index = 3
             ),
             "linemen" to Lesson(
                 id = "linemen",
+                chapterId = "player-positions",
                 title = "Offensive Line Techniques",
                 description = "Blocking fundamentals",
-                iconResId = R.drawable.ic_football,
+                contentType = ContentType.TEXT,
+                contentData = "Offensive linemen protect the quarterback and create running lanes. Key techniques include proper stance, hand placement, footwork, and leverage.",
+                imageResId = null,
                 durationMinutes = 22,
-                content = listOf(LessonContent.Text("Offensive linemen protect the quarterback...")),
-                isCompleted = false
+                isCompleted = false,
+                index = 4
             ),
             "receivers" to Lesson(
                 id = "receivers",
+                chapterId = "player-positions",
                 title = "Route Running",
                 description = "Receiver route fundamentals",
-                iconResId = R.drawable.ic_football,
+                contentType = ContentType.TEXT,
+                contentData = "Receivers run specific patterns called routes. Common routes include slants, outs, posts, and go routes. Proper technique involves clean breaks and precise timing.",
+                imageResId = null,
                 durationMinutes = 25,
-                content = listOf(LessonContent.Text("Receivers run specific patterns called routes...")),
-                isCompleted = false
+                isCompleted = false,
+                index = 5
             ),
             "kickoff" to Lesson(
                 id = "kickoff",
+                chapterId = "game-flow",
                 title = "Kickoffs",
                 description = "How games begin and resume",
-                iconResId = R.drawable.ic_football,
+                contentType = ContentType.TEXT,
+                contentData = "Games begin with a kickoff. The kicking team kicks from their own 35-yard line, and the receiving team attempts to return the ball for good field position.",
+                imageResId = null,
                 durationMinutes = 12,
-                content = listOf(LessonContent.Text("Games begin with a kickoff...")),
-                isCompleted = false
+                isCompleted = false,
+                index = 0
             ),
             "drives" to Lesson(
                 id = "drives",
+                chapterId = "game-flow",
                 title = "Offensive Drives",
                 description = "Moving the ball downfield",
-                iconResId = R.drawable.ic_football,
+                contentType = ContentType.TEXT,
+                contentData = "An offensive drive is a series of plays where the offense attempts to move the ball downfield. A successful drive results in a score, while an unsuccessful drive ends in a turnover or punt.",
+                imageResId = null,
                 durationMinutes = 15,
-                content = listOf(LessonContent.Text("An offensive drive is a series of plays...")),
-                isCompleted = false
+                isCompleted = false,
+                index = 1
             ),
             "timeouts" to Lesson(
                 id = "timeouts",
+                chapterId = "game-flow",
                 title = "Timeouts",
                 description = "Strategic use of time",
-                iconResId = R.drawable.ic_clock,
+                contentType = ContentType.TEXT,
+                contentData = "Teams have three timeouts per half. Timeouts stop the game clock and are used to manage time, discuss strategy, or stop the clock in late-game situations.",
+                imageResId = R.drawable.ic_clock,
                 durationMinutes = 10,
-                content = listOf(LessonContent.Text("Teams have three timeouts per half...")),
-                isCompleted = false
+                isCompleted = false,
+                index = 2
             ),
             "halftime" to Lesson(
                 id = "halftime",
+                chapterId = "game-flow",
                 title = "Halftime",
                 description = "The mid-game break",
-                iconResId = R.drawable.ic_football,
+                contentType = ContentType.TEXT,
+                contentData = "Halftime provides a break between the second and third quarters. Teams use this time to rest, adjust strategies, and make tactical changes for the second half.",
+                imageResId = null,
                 durationMinutes = 8,
-                content = listOf(LessonContent.Text("Halftime provides a break between the second and third quarters...")),
-                isCompleted = false
+                isCompleted = false,
+                index = 3
             ),
             "formations" to Lesson(
                 id = "formations",
+                chapterId = "advanced-tactics",
                 title = "Basic Formations",
                 description = "Learn about common offensive and defensive formations",
-                iconResId = R.drawable.ic_football,
+                contentType = ContentType.IMAGE,
+                contentData = "Formations determine the positioning of players on the field before the snap. The basic offensive formation is called the 'I Formation', with the quarterback under center, a fullback directly behind, and a running back behind the fullback.",
+                imageResId = R.drawable.offense_playbook_bg,
                 durationMinutes = 25,
-                content = lessonsContent["formations"] ?: emptyList(),
-                isCompleted = false
+                isCompleted = false,
+                index = 0
             ),
             "audibles" to Lesson(
                 id = "audibles",
+                chapterId = "advanced-tactics",
                 title = "Audibles",
                 description = "Changing plays at the line",
-                iconResId = R.drawable.ic_football,
+                contentType = ContentType.TEXT,
+                contentData = "Audibles are changes to the play call made by the quarterback at the line of scrimmage. They are typically called when the quarterback recognizes a defensive formation that would make the original play ineffective.",
+                imageResId = null,
                 durationMinutes = 18,
-                content = listOf(LessonContent.Text("Audibles are changes to the play call...")),
-                isCompleted = false
+                isCompleted = false,
+                index = 1
             ),
             "blitzes" to Lesson(
                 id = "blitzes",
+                chapterId = "advanced-tactics",
                 title = "Blitz Packages",
                 description = "Advanced defensive pressure",
-                iconResId = R.drawable.ic_football,
+                contentType = ContentType.TEXT,
+                contentData = "Blitzes are designed to pressure the quarterback by sending more defenders than the offense can block. Different blitz packages target different gaps and use various timing to confuse the offensive line.",
+                imageResId = null,
                 durationMinutes = 20,
-                content = listOf(LessonContent.Text("Blitzes are designed to pressure the quarterback...")),
-                isCompleted = false
+                isCompleted = false,
+                index = 2
             ),
             "coverages" to Lesson(
                 id = "coverages",
+                chapterId = "advanced-tactics",
                 title = "Coverage Schemes",
                 description = "Defending against the pass",
-                iconResId = R.drawable.ic_football,
+                contentType = ContentType.TEXT,
+                contentData = "Coverage schemes determine how defenders match up against receivers. Common coverages include man-to-man, zone coverage (Cover 2, Cover 3, etc.), and hybrid schemes that combine both approaches.",
+                imageResId = null,
                 durationMinutes = 22,
-                content = listOf(LessonContent.Text("Coverage schemes determine how defenders match up...")),
-                isCompleted = false
+                isCompleted = false,
+                index = 3
             )
         )
 
@@ -266,6 +302,7 @@ class DataManager {
         private val chapters = listOf(
             Chapter(
                 id = "basic-rules",
+                courseId = "football-basics",
                 title = "Basic Rules",
                 description = "Learn the fundamental rules of American Football",
                 lessons = listOf(
@@ -278,10 +315,12 @@ class DataManager {
                 isLocked = false,
                 requiredChapterIds = emptyList(),
                 quiz = quizzes["basic-rules-quiz"],
-                quizCompleted = true
+                quizCompleted = true,
+                index = 0
             ),
             Chapter(
                 id = "player-positions",
+                courseId = "football-basics",
                 title = "Player Positions",
                 description = "Understand the different positions and their roles",
                 lessons = listOf(
@@ -295,10 +334,12 @@ class DataManager {
                 isLocked = false,
                 requiredChapterIds = listOf("basic-rules"),
                 quiz = quizzes["positions-quiz"],
-                quizCompleted = false
+                quizCompleted = false,
+                index = 1
             ),
             Chapter(
                 id = "game-flow",
+                courseId = "football-basics",
                 title = "Game Flow",
                 description = "Follow the flow of a football game from start to finish",
                 lessons = listOf(
@@ -310,10 +351,12 @@ class DataManager {
                 isLocked = false,
                 requiredChapterIds = listOf("basic-rules", "player-positions"),
                 quiz = quizzes["game-flow-quiz"],
-                quizCompleted = false
+                quizCompleted = false,
+                index = 2
             ),
             Chapter(
                 id = "advanced-tactics",
+                courseId = "football-basics",
                 title = "Advanced Tactics",
                 description = "Learn advanced football strategies and plays",
                 lessons = listOf(
@@ -325,7 +368,8 @@ class DataManager {
                 isLocked = true,
                 requiredChapterIds = listOf("basic-rules", "player-positions", "game-flow"),
                 quiz = quizzes["advanced-tactics-quiz"],
-                quizCompleted = false
+                quizCompleted = false,
+                index = 3
             )
         )
 
@@ -379,8 +423,8 @@ class DataManager {
         private var hasStartedLearning = true
         private var goalCompleted = false
 
-        // Track lesson progress (mapping of lesson ID to page number)
-        private val lessonProgress = mutableMapOf<String, Int>()
+        // Track completed lessons
+        private val completedLessons = mutableSetOf<String>()
 
         // Track which lessons have been started
         private val startedLessons = mutableSetOf<String>()
@@ -418,18 +462,61 @@ class DataManager {
 
         fun getLessonById(id: String): Lesson? = lessons[id]
 
+        // New method to get lesson content
+        fun getLessonContent(lessonId: String): Pair<String, Int?> {
+            val lesson = lessons[lessonId] ?: return Pair("", null)
+            return Pair(lesson.contentData, lesson.imageResId)
+        }
+
         fun hasStartedLesson(lessonId: String): Boolean {
             return startedLessons.contains(lessonId)
         }
 
-        fun getLessonProgress(lessonId: String): Int {
-            return lessonProgress.getOrDefault(lessonId, 1)
+        fun isLessonCompleted(lessonId: String): Boolean {
+            return completedLessons.contains(lessonId)
         }
 
-        fun updateLessonProgress(lessonId: String, pageNumber: Int) {
-            lessonProgress[lessonId] = pageNumber
+        fun markLessonComplete(lessonId: String) {
+            completedLessons.add(lessonId)
             startedLessons.add(lessonId)
             // In future, save this to SharedPreferences or database
+            Log.d("DataManager", "Lesson $lessonId marked as completed")
+        }
+
+        // Get lessons for a specific chapter
+        fun getLessonsForChapter(chapterId: String): List<Lesson> {
+            return lessons.values.filter { it.chapterId == chapterId }
+                .sortedBy { it.index }
+        }
+
+        // Get next lesson in a chapter
+        fun getNextLessonInChapter(chapterId: String): Lesson? {
+            val chapterLessons = getLessonsForChapter(chapterId)
+            return chapterLessons.firstOrNull { !completedLessons.contains(it.id) }
+        }
+
+        // Get next incomplete lesson
+        fun getNextIncompleteLesson(lessonId: String): Lesson? {
+            val currentLesson = getLessonById(lessonId) ?: return null
+            val chapterId = currentLesson.chapterId
+            val chapterLessons = getLessonsForChapter(chapterId)
+
+            // Find lessons with higher index that aren't completed
+            return chapterLessons
+                .filter { it.index > currentLesson.index && !completedLessons.contains(it.id) }
+                .minByOrNull { it.index }
+        }
+
+        // Get previous lesson
+        fun getPreviousLesson(lessonId: String): Lesson? {
+            val currentLesson = getLessonById(lessonId) ?: return null
+            val chapterId = currentLesson.chapterId
+            val chapterLessons = getLessonsForChapter(chapterId)
+
+            // Find lessons with lower index
+            return chapterLessons
+                .filter { it.index < currentLesson.index }
+                .maxByOrNull { it.index }
         }
 
         fun getAllLessons(): List<Lesson> = lessons.values.toList()
@@ -439,6 +526,14 @@ class DataManager {
         fun getCourseById(id: String): Course? = courses.find { it.id == id }
         fun getCurrentCourse(): Course = getCourseById("football-basics") ?: courses.first()
 
+        // Check if a lesson is the last one in its chapter
+        fun isLastLessonInChapter(lessonId: String): Boolean {
+            val lesson = getLessonById(lessonId) ?: return false
+            val chapterLessons = getLessonsForChapter(lesson.chapterId)
+            val lastLesson = chapterLessons.maxByOrNull { it.index }
+            return lastLesson?.id == lessonId
+        }
+
         // State methods
         fun hasStartedLearning(): Boolean = hasStartedLearning
         fun setStartedLearning(started: Boolean) {
@@ -447,11 +542,9 @@ class DataManager {
         }
 
         fun wasLessonCompletedToday(lessonId: String): Boolean {
-            val lesson = getLessonById(lessonId) ?: return false
-
             // For now, just check if the lesson is completed
             // In future, we'd also check the completion date
-            return lesson.isCompleted
+            return completedLessons.contains(lessonId)
         }
 
         // Get next lesson to complete (for Today's Goal)
@@ -463,7 +556,7 @@ class DataManager {
                 if (chapter.isLocked) continue
 
                 for (lesson in chapter.lessons) {
-                    if (!lesson.isCompleted) {
+                    if (!completedLessons.contains(lesson.id)) {
                         return lesson
                     }
                 }
@@ -479,7 +572,7 @@ class DataManager {
                     if (chapter.isLocked) continue
 
                     for (lesson in chapter.lessons) {
-                        if (!lesson.isCompleted) {
+                        if (!completedLessons.contains(lesson.id)) {
                             return lesson
                         }
                     }
@@ -489,10 +582,21 @@ class DataManager {
             return null
         }
 
-        fun getChapterForLesson(lessonId: String): Chapter? {
-            return getAllChapters().find { chapter ->
-                chapter.lessons.any { it.id == lessonId }
+        // Check if a chapter has been started
+        fun hasStartedChapter(chapterId: String): Boolean {
+            // Check if chapter ID is in tracked started chapters
+            if (startedChapters.contains(chapterId)) return true
+
+            // Or check if any lessons in the chapter have been started
+            val chapterLessons = getLessonsForChapter(chapterId)
+            val hasStartedAnyLesson = chapterLessons.any { startedLessons.contains(it.id) }
+
+            // If any lesson has been started, mark the chapter as started too
+            if (hasStartedAnyLesson) {
+                startedChapters.add(chapterId)
             }
+
+            return hasStartedAnyLesson
         }
 
         // Get the current or next chapter to study
@@ -501,40 +605,23 @@ class DataManager {
 
             // Try to find an incomplete chapter in the current course
             val currentChapter = currentCourse.chapters.find {
-                !it.isLocked && !it.isCompleted
+                !it.isLocked && it.lessons.any { lesson -> !completedLessons.contains(lesson.id) }
             }
 
             if (currentChapter != null) {
                 return Pair(currentCourse, currentChapter)
             }
 
-            // If all chapters in current course are completed, find the next course
+            // If all chapters in current course are completed or locked, find the next course
             val nextCourse = getAllCourses().find {
                 !it.isCompleted && it.id != currentCourse.id
             } ?: return null
 
             val nextChapter = nextCourse.chapters.find {
-                !it.isLocked && !it.isCompleted
+                !it.isLocked && it.lessons.any { lesson -> !completedLessons.contains(lesson.id) }
             } ?: return null
 
             return Pair(nextCourse, nextChapter)
-        }
-
-        // Check if a chapter has been started
-        fun hasStartedChapter(chapterId: String): Boolean {
-            // Check if chapter ID is in tracked started chapters
-            if (startedChapters.contains(chapterId)) return true
-
-            // Or check if any lessons in the chapter have been started
-            val chapter = getChapterById(chapterId) ?: return false
-            val hasStartedAnyLesson = chapter.lessons.any { hasStartedLesson(it.id) }
-
-            // If any lesson has been started, mark the chapter as started too
-            if (hasStartedAnyLesson) {
-                startedChapters.add(chapterId)
-            }
-
-            return hasStartedAnyLesson
         }
 
         // Get random quick tip
