@@ -7,7 +7,6 @@ data class Chapter(
     val description: String,
     val lessons: List<Lesson>,  // Ordered list of lessons
     val isLocked: Boolean,
-    val requiredChapterIds: List<String> = emptyList(),
     val quiz: Quiz? = null,
     val quizCompleted: Boolean = false,
     val index: Int              // Position within course
@@ -24,6 +23,10 @@ data class Chapter(
 
     // Chapter is fully completed if all lessons are completed and quiz is completed
     val isCompleted: Boolean
-        get() = progress == 100 && (quiz == null || quizCompleted)
+        get() {
+            val allLessonsCompleted = lessons.all { it.isCompleted }
+            val quizCompleted = quiz == null || this.quizCompleted || DataManager.isQuizCompleted(id)
+            return allLessonsCompleted && quizCompleted
+        }
 }
 

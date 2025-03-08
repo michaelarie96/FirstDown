@@ -10,6 +10,7 @@ import com.firebase.ui.auth.FirebaseAuthUIActivityResultContract
 import com.firebase.ui.auth.data.model.FirebaseAuthUIAuthenticationResult
 import com.google.firebase.auth.FirebaseAuth
 import com.example.firstdown.databinding.ActivityLoginBinding
+import com.example.firstdown.model.DataManager
 
 class LoginActivity : AppCompatActivity() {
 
@@ -57,7 +58,11 @@ class LoginActivity : AppCompatActivity() {
         if (result.resultCode == RESULT_OK) {
             val user = FirebaseAuth.getInstance().currentUser
             Toast.makeText(this, "Welcome ${user?.displayName}", Toast.LENGTH_SHORT).show()
-            navigateToHome()
+
+            // Load user progress before navigating
+            DataManager.loadUserProgress {
+                navigateToHome()
+            }
         } else {
             val response = result.idpResponse
             if (response == null) {

@@ -1,11 +1,9 @@
-// app/src/main/java/com/example/firstdown/fragments/QuizFragment.kt
 package com.example.firstdown.fragments
 
 import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import android.widget.RadioButton
 import android.widget.Toast
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.viewModels
@@ -146,9 +144,6 @@ class QuizFragment : Fragment() {
         // Show feedback
         val feedbackMessage = if (isCorrect) "Correct!" else "Incorrect!"
         Toast.makeText(requireContext(), feedbackMessage, Toast.LENGTH_SHORT).show()
-
-        // Get current quiz for explanation
-        val quiz = viewModel.getQuizForChapter(chapterId)
 
         // Mark quiz as completed
         viewModel.markQuizCompleted(chapterId, score)

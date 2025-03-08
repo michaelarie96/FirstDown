@@ -3,6 +3,11 @@ package com.example.firstdown.model
 import android.util.Log
 import com.example.firstdown.R
 import com.google.firebase.auth.FirebaseAuth
+import com.example.firstdown.utilities.FirestoreManager
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 
 class DataManager {
     companion object {
@@ -34,7 +39,7 @@ class DataManager {
             "Practice ball security with the 5-point contact method"
         )
 
-        // Sample lessons data - updated to the new structure
+        // Sample lessons data
         private val lessons = mapOf(
             "downs" to Lesson(
                 id = "downs",
@@ -45,7 +50,7 @@ class DataManager {
                 contentData = "In American football, a team has four attempts (downs) to advance the ball 10 yards. If they succeed, they get a new set of downs. If they fail, possession is turned over to the opposing team.",
                 imageResId = R.drawable.football_field_bg,
                 durationMinutes = 15,
-                isCompleted = true,
+                isCompleted = false,
                 index = 0
             ),
             "scoring" to Lesson(
@@ -57,7 +62,7 @@ class DataManager {
                 contentData = "There are multiple ways to score in football including touchdowns (6 points), extra points (1 or 2 points), field goals (3 points), and safeties (2 points).",
                 imageResId = null,
                 durationMinutes = 12,
-                isCompleted = true,
+                isCompleted = false,
                 index = 1
             ),
             "penalties" to Lesson(
@@ -69,7 +74,7 @@ class DataManager {
                 contentData = "Penalties are called when rules are broken. Common penalties include offside, holding, pass interference, and false start. Most result in yardage penalties.",
                 imageResId = R.drawable.ic_flag,
                 durationMinutes = 20,
-                isCompleted = true,
+                isCompleted = false,
                 index = 2
             ),
             "timing" to Lesson(
@@ -81,7 +86,7 @@ class DataManager {
                 contentData = "Football games are divided into four quarters of 15 minutes each. The clock stops for incomplete passes, when a player goes out of bounds, and during timeouts.",
                 imageResId = R.drawable.ic_clock,
                 durationMinutes = 10,
-                isCompleted = true,
+                isCompleted = false,
                 index = 3
             ),
             "field" to Lesson(
@@ -105,7 +110,7 @@ class DataManager {
                 contentData = "The offense consists of various positions including quarterback, running back, wide receiver, tight end, and offensive linemen. Each position has specific responsibilities in moving the ball down the field.",
                 imageResId = null,
                 durationMinutes = 18,
-                isCompleted = true,
+                isCompleted = false,
                 index = 0
             ),
             "defense" to Lesson(
@@ -117,7 +122,7 @@ class DataManager {
                 contentData = "The defense consists of various positions including defensive linemen, linebackers, cornerbacks, and safeties. Each position has specific responsibilities in stopping the offense.",
                 imageResId = null,
                 durationMinutes = 18,
-                isCompleted = true,
+                isCompleted = false,
                 index = 1
             ),
             "special" to Lesson(
@@ -313,9 +318,8 @@ class DataManager {
                     lessons["field"]!!
                 ),
                 isLocked = false,
-                requiredChapterIds = emptyList(),
                 quiz = quizzes["basic-rules-quiz"],
-                quizCompleted = true,
+                quizCompleted = false,
                 index = 0
             ),
             Chapter(
@@ -332,7 +336,6 @@ class DataManager {
                     lessons["receivers"]!!
                 ),
                 isLocked = false,
-                requiredChapterIds = listOf("basic-rules"),
                 quiz = quizzes["positions-quiz"],
                 quizCompleted = false,
                 index = 1
@@ -349,7 +352,6 @@ class DataManager {
                     lessons["halftime"]!!
                 ),
                 isLocked = false,
-                requiredChapterIds = listOf("basic-rules", "player-positions"),
                 quiz = quizzes["game-flow-quiz"],
                 quizCompleted = false,
                 index = 2
@@ -366,7 +368,6 @@ class DataManager {
                     lessons["coverages"]!!
                 ),
                 isLocked = true,
-                requiredChapterIds = listOf("basic-rules", "player-positions", "game-flow"),
                 quiz = quizzes["advanced-tactics-quiz"],
                 quizCompleted = false,
                 index = 3
@@ -432,6 +433,63 @@ class DataManager {
         // Track which chapters have been started
         private val startedChapters = mutableSetOf<String>()
 
+        private val completedQuizzes = mutableSetOf<String>()
+
+        private var isProgressLoaded = false
+
+        fun isQuizCompleted(chapterId: String): Boolean {
+            return completedQuizzes.contains(chapterId)
+        }
+
+        fun loadUserProgress(onComplete: () -> Unit = {}) {
+            // Don't reload if already loaded
+            if (isProgressLoaded) {
+                onComplete()
+                return
+            }
+
+            CoroutineScope(Dispatchers.IO).launch {
+                try {
+                    val progress = FirestoreManager.loadUserProgress()
+
+                    if (progress != null) {
+                        withContext(Dispatchers.Main) {
+                            // Update our local cache with the loaded progress
+                            completedLessons.clear()
+                            completedLessons.addAll(progress.completedLessons)
+
+                            completedQuizzes.clear()
+                            completedQuizzes.addAll(progress.completedQuizzes)
+
+                            startedLessons.clear()
+                            startedLessons.addAll(progress.startedLessons)
+
+                            startedChapters.clear()
+                            startedChapters.addAll(progress.startedChapters)
+
+                            hasStartedLearning = progress.startedLessons.isNotEmpty()
+                            isProgressLoaded = true
+
+                            Log.d("DataManager", "User progress loaded successfully")
+                            onComplete()
+                        }
+                    } else {
+                        // No saved progress found, use defaults
+                        withContext(Dispatchers.Main) {
+                            isProgressLoaded = true
+                            onComplete()
+                        }
+                    }
+                } catch (e: Exception) {
+                    Log.e("DataManager", "Error loading user progress", e)
+                    withContext(Dispatchers.Main) {
+                        isProgressLoaded = true
+                        onComplete()
+                    }
+                }
+            }
+        }
+
         // Accessor methods
 
         fun getCurrentUser(): User {
@@ -479,8 +537,34 @@ class DataManager {
         fun markLessonComplete(lessonId: String) {
             completedLessons.add(lessonId)
             startedLessons.add(lessonId)
-            // In future, save this to SharedPreferences or database
+
+            // Get the chapter and mark it as started
+            getLessonById(lessonId)?.let { lesson ->
+                startedChapters.add(lesson.chapterId)
+            }
+
+            // Save the updated progress to Firestore
+            saveUserProgress()
+
             Log.d("DataManager", "Lesson $lessonId marked as completed")
+        }
+
+        fun markQuizCompleted(chapterId: String, score: Int) {
+            completedQuizzes.add(chapterId)
+
+            // Save the updated progress to Firestore
+            saveUserProgress()
+
+            Log.d("DataManager", "Quiz for chapter $chapterId marked as completed with score $score")
+        }
+
+        fun saveUserProgress() {
+            FirestoreManager.saveUserProgress(
+                completedLessons = completedLessons,
+                completedQuizzes = completedQuizzes,
+                startedLessons = startedLessons,
+                startedChapters = startedChapters
+            )
         }
 
         // Get lessons for a specific chapter
@@ -519,11 +603,78 @@ class DataManager {
                 .maxByOrNull { it.index }
         }
 
+        fun getAllCourses(): List<Course> {
+            // Dynamic course locking based on completion of previous courses
+            return courses.mapIndexed { index, course ->
+                val shouldBeLocked = shouldCourseBeLocked(course.id)
+
+                // Update chapters with dynamic locking status
+                val updatedChapters = course.chapters.mapIndexed { chapterIndex, chapter ->
+                    // First chapter of first course is never locked
+                    val isFirstChapter = index == 0 && chapterIndex == 0
+                    val chapterShouldBeLocked = if (isFirstChapter) false else shouldChapterBeLocked(chapter.id)
+
+                    chapter.copy(isLocked = shouldBeLocked || chapterShouldBeLocked)
+                }
+
+                course.copy(chapters = updatedChapters)
+            }
+        }
+
+        fun getCourseById(id: String): Course? {
+            val course = courses.find { it.id == id } ?: return null
+
+            // Apply dynamic locking to chapters in this course
+            val updatedChapters = course.chapters.mapIndexed { index, chapter ->
+                val isFirstChapter = index == 0
+                val chapterShouldBeLocked = if (isFirstChapter) false else shouldChapterBeLocked(chapter.id)
+
+                chapter.copy(isLocked = chapterShouldBeLocked)
+            }
+
+            return course.copy(chapters = updatedChapters)
+        }
+
+        fun getChapterById(id: String): Chapter? {
+            val chapter = chapters.find { it.id == id } ?: return null
+
+            // Update lessons with completion status
+            val updatedLessons = chapter.lessons.map { lesson ->
+                lesson.copy(isCompleted = completedLessons.contains(lesson.id))
+            }
+
+            // Check if chapter should be locked
+            val chapterIndex = chapters.filter { it.courseId == chapter.courseId }
+                .sortedBy { it.index }
+                .indexOfFirst { it.id == chapter.id }
+
+            val isFirstChapter = chapterIndex == 0
+            val shouldBeLocked = if (isFirstChapter) false else shouldChapterBeLocked(chapter.id)
+
+            return chapter.copy(
+                lessons = updatedLessons,
+                isLocked = shouldBeLocked
+            )
+        }
+
+        fun getAllChapters(): List<Chapter> {
+            return chapters.map { chapter ->
+                // Update lessons with completion status
+                val updatedLessons = chapter.lessons.map { lesson ->
+                    lesson.copy(isCompleted = completedLessons.contains(lesson.id))
+                }
+
+                // Check if chapter should be locked
+                val shouldBeLocked = shouldChapterBeLocked(chapter.id)
+
+                chapter.copy(
+                    lessons = updatedLessons,
+                    isLocked = shouldBeLocked
+                )
+            }
+        }
+
         fun getAllLessons(): List<Lesson> = lessons.values.toList()
-        fun getAllChapters(): List<Chapter> = chapters
-        fun getAllCourses(): List<Course> = courses
-        fun getChapterById(id: String): Chapter? = chapters.find { it.id == id }
-        fun getCourseById(id: String): Course? = courses.find { it.id == id }
         fun getCurrentCourse(): Course = getCourseById("football-basics") ?: courses.first()
 
         // Check if a lesson is the last one in its chapter
@@ -622,6 +773,55 @@ class DataManager {
             } ?: return null
 
             return Pair(nextCourse, nextChapter)
+        }
+
+        fun shouldChapterBeLocked(chapterId: String): Boolean {
+            val chapter = chapters.find { it.id == chapterId } ?: return true
+
+            // Get all chapters for this course
+            val courseChapters = chapters.filter { it.courseId == chapter.courseId }
+                .sortedBy { it.index }
+
+            // Find the chapter index
+            val chapterIndex = courseChapters.indexOfFirst { it.id == chapterId }
+            if (chapterIndex <= 0) return false // First chapter is never locked
+
+            // Check if all previous chapters are completed
+            for (i in 0 until chapterIndex) {
+                val previousChapter = courseChapters[i]
+                if (!isChapterCompleted(previousChapter.id)) {
+                    return true // Lock if any previous chapter isn't completed
+                }
+            }
+
+            return false // All previous chapters completed, so this one is unlocked
+        }
+
+        fun isChapterCompleted(chapterId: String): Boolean {
+            val chapter = getChapterById(chapterId) ?: return false
+
+            // A chapter is completed if all its lessons are completed and its quiz is completed (if it has one)
+            val allLessonsCompleted = chapter.lessons.all { completedLessons.contains(it.id) }
+            val quizCompleted = chapter.quiz == null || completedQuizzes.contains(chapterId)
+
+            return allLessonsCompleted && quizCompleted
+        }
+
+        fun shouldCourseBeLocked(courseId: String): Boolean {
+            val courseIndex = courses.indexOfFirst { it.id == courseId }
+
+            // First course is never locked
+            if (courseIndex <= 0) return false
+
+            // Check if all previous courses are completed
+            for (i in 0 until courseIndex) {
+                val previousCourse = courses[i]
+                if (!previousCourse.isCompleted) {
+                    return true // Lock if any previous course isn't completed
+                }
+            }
+
+            return false
         }
 
         // Get random quick tip

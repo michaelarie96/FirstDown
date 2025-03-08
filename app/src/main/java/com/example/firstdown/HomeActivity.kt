@@ -10,6 +10,7 @@ import androidx.navigation.ui.setupWithNavController
 import com.google.android.material.bottomnavigation.BottomNavigationView
 import com.example.firstdown.databinding.ActivityHomeBinding
 import com.example.firstdown.fragments.HomeFragment
+import com.example.firstdown.model.DataManager
 import com.google.firebase.auth.FirebaseAuth
 
 class HomeActivity : AppCompatActivity() {
@@ -27,19 +28,22 @@ class HomeActivity : AppCompatActivity() {
         val isNewUser = intent.getBooleanExtra("IS_NEW_USER", false)
         HomeFragment.isNewUserStatic = isNewUser
 
-        // Find the NavHostFragment and get its controller
-        val navHostFragment = supportFragmentManager
-            .findFragmentById(R.id.nav_host_fragment) as? NavHostFragment
+        // Load user progress first
+        DataManager.loadUserProgress {
+            // Find the NavHostFragment and get its controller
+            val navHostFragment = supportFragmentManager
+                .findFragmentById(R.id.nav_host_fragment) as? NavHostFragment
 
-        if (navHostFragment != null) {
-            navController = navHostFragment.navController
+            if (navHostFragment != null) {
+                navController = navHostFragment.navController
 
-            // Set up bottom navigation with the nav controller
-            val navView: BottomNavigationView = binding.bottomNavigation
-            navView.setupWithNavController(navController)
-        } else {
-            // Handle the case where nav host fragment is not found, helps with debugging
-            throw IllegalStateException("NavHostFragment not found in activity_home.xml")
+                // Set up bottom navigation with the nav controller
+                val navView: BottomNavigationView = binding.bottomNavigation
+                navView.setupWithNavController(navController)
+            } else {
+                // Handle the case where nav host fragment is not found, helps with debugging
+                throw IllegalStateException("NavHostFragment not found in activity_home.xml")
+            }
         }
 
         authStateListener = FirebaseAuth.AuthStateListener { auth ->

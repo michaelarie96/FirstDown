@@ -6,6 +6,8 @@ import android.util.Log
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AppCompatActivity
 import com.example.firstdown.databinding.ActivityWelcomeBinding
+import com.example.firstdown.model.DataManager
+import com.google.firebase.FirebaseApp
 import com.google.firebase.auth.FirebaseAuth
 
 class WelcomeActivity : AppCompatActivity() {
@@ -24,12 +26,17 @@ class WelcomeActivity : AppCompatActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+
+        FirebaseApp.initializeApp(this)
+
         Log.d("WelcomeActivity", "onCreate: currentUser = ${FirebaseAuth.getInstance().currentUser}")
 
         // Check if user is already signed in
         if (FirebaseAuth.getInstance().currentUser != null) {
-            // User is already signed in, go directly to HomeActivity
-            navigateToHome()
+            // User is already signed in, load progress and go to HomeActivity
+            DataManager.loadUserProgress {
+                navigateToHome()
+            }
             return  // Skip the rest of onCreate
         }
 

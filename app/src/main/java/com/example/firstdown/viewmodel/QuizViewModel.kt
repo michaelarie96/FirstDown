@@ -33,15 +33,6 @@ class QuizViewModel : ViewModel() {
         return getQuizForChapter(chapterId) != null
     }
 
-    // Mark quiz as completed
     fun markQuizCompleted(chapterId: String, score: Int) {
-        // In future, this would update the chapter's quizCompleted flag
-        // and store the quiz score in the user's profile
-        // For now, just log the completion
-        val chapter = getChapterById(chapterId)
-        if (chapter != null) {
-            // Simulate updating the database
-            // In future, call DataManager.completeChapterQuiz(chapterId, score)
-        }
-    }
-}
+        DataManager.markQuizCompleted(chapterId, score)
+    }}

@@ -21,7 +21,6 @@ data class Course(
     val totalLessons: Int
         get() = chapters.sumOf { it.lessons.size }
 
-    // Check if the course is completed (all chapters 100% complete)
     val isCompleted: Boolean
-        get() = chapters.all { it.progress == 100 }
+        get() = chapters.all { it.isCompleted }
 }
