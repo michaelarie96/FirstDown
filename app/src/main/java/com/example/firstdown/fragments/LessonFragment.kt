@@ -53,16 +53,24 @@ class LessonFragment : Fragment() {
     private fun setupUI() {
         lessonId = args.lessonId
 
-        val lesson = viewModel.getLessonById(lessonId)
-        if (lesson == null) {
-            Toast.makeText(context, "Error loading lesson", Toast.LENGTH_SHORT).show()
-            findNavController().navigateUp()
-            return
+        // Try to get cached lesson for immediate display
+        val cachedLesson = viewModel.getCachedLessonById(lessonId)
+        if (cachedLesson != null) {
+            binding.tvLessonTitle.text = cachedLesson.title
+            displayLessonContent(cachedLesson)
         }
 
-        binding.tvLessonTitle.text = lesson.title
+        // Always fetch the latest data
+        viewModel.getLessonById(lessonId) { lesson ->
+            if (lesson == null) {
+                Toast.makeText(context, "Error loading lesson", Toast.LENGTH_SHORT).show()
+                findNavController().navigateUp()
+                return@getLessonById
+            }
 
-        displayLessonContent(lesson)
+            binding.tvLessonTitle.text = lesson.title
+            displayLessonContent(lesson)
+        }
     }
 
     private fun displayLessonContent(lesson: Lesson) {

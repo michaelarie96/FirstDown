@@ -17,7 +17,7 @@ data class Chapter(
             if (lessons.isEmpty()) return 0
 
             // Count lessons that are marked as completed in DataManager
-            val completedLessonsCount = lessons.count { DataManager.isLessonCompleted(it.id) }
+            val completedLessonsCount = lessons.count { DataManager.isLessonCompletedSync(it.id) }
             return (completedLessonsCount * 100) / lessons.size
         }
 

@@ -7,6 +7,6 @@ import com.example.firstdown.model.User
 class ProfileViewModel : ViewModel() {
 
     fun getCurrentUser(onComplete: (User) -> Unit) {
-        onComplete(DataManager.getCurrentUser())
+        DataManager.getCurrentUser(onComplete)
     }
 }

@@ -7,12 +7,16 @@ import com.example.firstdown.model.Lesson
 
 class LessonViewModel : ViewModel() {
 
-    fun getLessonById(lessonId: String): Lesson? {
-        return DataManager.getLessonById(lessonId)
+    fun getLessonById(lessonId: String, onComplete: (Lesson?) -> Unit) {
+        DataManager.getLessonById(lessonId, onComplete)
     }
 
-    fun markLessonComplete(lessonId: String) {
-        DataManager.markLessonComplete(lessonId)
+    fun getCachedLessonById(lessonId: String): Lesson? {
+        return DataManager.getCachedLessonById(lessonId)
+    }
+
+    fun markLessonComplete(lessonId: String, onComplete: () -> Unit = {}) {
+        DataManager.markLessonComplete(lessonId, onComplete)
     }
 
     fun getLessonContent(lessonId: String, onComplete: (Pair<String, Int?>) -> Unit) {

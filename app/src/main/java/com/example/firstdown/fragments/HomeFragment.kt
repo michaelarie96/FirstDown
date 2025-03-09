@@ -81,19 +81,23 @@ class HomeFragment : Fragment() {
             if (courseChapterPair != null) {
                 val (course, chapter) = courseChapterPair
 
-                if (isFirstTimeUser || !viewModel.hasStartedAnyLearning()) {
-                    binding.tvLearningStatus.text = getString(R.string.start_learning)
-                } else {
-                    binding.tvLearningStatus.text = getString(R.string.continue_learning)
+                viewModel.hasStartedAnyLearning { hasStarted ->
+                    if (isFirstTimeUser || !hasStarted) {
+                        binding.tvLearningStatus.text = getString(R.string.start_learning)
+                    } else {
+                        binding.tvLearningStatus.text = getString(R.string.continue_learning)
+                    }
                 }
 
                 binding.tvLessonTitle.text = course.title
                 binding.tvLessonDescription.text = chapter.title
 
-                if (viewModel.hasStartedChapter(chapter.id)) {
-                    binding.btnStart.text = getString(R.string.continue_learning_button)
-                } else {
-                    binding.btnStart.text = getString(R.string.start_learning)
+                viewModel.hasStartedChapter(chapter.id) { hasStarted ->
+                    if (hasStarted) {
+                        binding.btnStart.text = getString(R.string.continue_learning_button)
+                    } else {
+                        binding.btnStart.text = getString(R.string.start_learning)
+                    }
                 }
 
                 // Setup button listener
@@ -111,30 +115,30 @@ class HomeFragment : Fragment() {
     }
 
     private fun setupLatestAchievement() {
-        val latestAchievement = viewModel.getLatestAchievement()
+        viewModel.getLatestAchievement { latestAchievement ->
+            if (latestAchievement != null) {
+                val achievementCard = binding.layoutAchievements.getChildAt(0)
 
-        if (latestAchievement != null) {
-            val achievementCard = binding.layoutAchievements.getChildAt(0)
+                val tvAchievementTitle = achievementCard.findViewById<TextView>(R.id.tv_achievement_title)
+                val tvAchievementDesc = achievementCard.findViewById<TextView>(R.id.tv_achievement_description)
+                val tvAchievementDate = achievementCard.findViewById<TextView>(R.id.tv_achievement_date)
 
-            val tvAchievementTitle = achievementCard.findViewById<TextView>(R.id.tv_achievement_title)
-            val tvAchievementDesc = achievementCard.findViewById<TextView>(R.id.tv_achievement_description)
-            val tvAchievementDate = achievementCard.findViewById<TextView>(R.id.tv_achievement_date)
+                tvAchievementTitle.text = latestAchievement.title
+                tvAchievementDesc.text = latestAchievement.description
 
-            tvAchievementTitle.text = latestAchievement.title
-            tvAchievementDesc.text = latestAchievement.description
-
-            val daysAgo = (System.currentTimeMillis() - latestAchievement.earnedDate) / (1000 * 60 * 60 * 24)
-            tvAchievementDate.text = getString(R.string.earned_days_ago, daysAgo.toInt())
+                val daysAgo = (System.currentTimeMillis() - latestAchievement.earnedDate) / (1000 * 60 * 60 * 24)
+                tvAchievementDate.text = getString(R.string.earned_days_ago, daysAgo.toInt())
+            }
         }
     }
 
     private fun setupQuickTip() {
-        val quickTip = viewModel.getRandomQuickTip()
+        viewModel.getRandomQuickTip { quickTip ->
+            val tipCard = binding.layoutAchievements.getChildAt(1)
+            val tvTipContent = tipCard.findViewById<TextView>(R.id.tv_tip_content)
 
-        val tipCard = binding.layoutAchievements.getChildAt(1)
-        val tvTipContent = tipCard.findViewById<TextView>(R.id.tv_tip_content)
-
-        tvTipContent.text = quickTip
+            tvTipContent.text = quickTip
+        }
     }
 
     private fun setupListeners() {
@@ -145,16 +149,16 @@ class HomeFragment : Fragment() {
 
         // Button listener for continuing/starting learning
         binding.btnStart.setOnClickListener {
-            val courseChapterPair = viewModel.getCurrentOrNextChapter()
+            viewModel.getCurrentOrNextChapter { courseChapterPair ->
+                if (courseChapterPair != null) {
+                    val (_, chapter) = courseChapterPair
 
-            if (courseChapterPair != null) {
-                val (_, chapter) = courseChapterPair
+                    // Find the first unfinished lesson in this chapter
+                    val lesson = chapter.lessons.find { !it.isCompleted }
 
-                // Find the first unfinished lesson in this chapter
-                val lesson = chapter.lessons.find { !it.isCompleted }
-
-                if (lesson != null) {
-                    navigateToLesson(lesson.id, lesson.title)
+                    if (lesson != null) {
+                        navigateToLesson(lesson.id, lesson.title)
+                    }
                 }
             }
         }

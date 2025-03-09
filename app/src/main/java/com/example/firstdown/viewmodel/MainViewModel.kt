@@ -11,7 +11,7 @@ import com.example.firstdown.model.User
 class MainViewModel : ViewModel() {
 
     fun getCurrentUser(onComplete: (User) -> Unit) {
-        onComplete(DataManager.getCurrentUser())
+        DataManager.getCurrentUser(onComplete)
     }
 
     fun getNextLessonToComplete(onComplete: (Lesson?) -> Unit) {
@@ -19,7 +19,7 @@ class MainViewModel : ViewModel() {
     }
 
     fun wasLessonCompletedToday(lessonId: String, onComplete: (Boolean) -> Unit) {
-        onComplete(DataManager.wasLessonCompletedToday(lessonId))
+        DataManager.wasLessonCompletedToday(lessonId, onComplete)
     }
 
     fun getCurrentOrNextChapter(onComplete: (Pair<Course, Chapter>?) -> Unit) {
@@ -31,23 +31,23 @@ class MainViewModel : ViewModel() {
     }
 
     fun hasStartedAnyLearning(onComplete: (Boolean) -> Unit) {
-        onComplete(DataManager.hasStartedLearning())
+        DataManager.hasStartedLearning(onComplete)
     }
 
     fun getLatestAchievement(onComplete: (Achievement?) -> Unit) {
-        onComplete(DataManager.getLatestAchievement())
+        DataManager.getLatestAchievement(onComplete)
     }
 
     fun getRandomQuickTip(onComplete: (String) -> Unit) {
-        onComplete(DataManager.getRandomQuickTip())
+        DataManager.getRandomQuickTip(onComplete)
     }
 
     fun hasStartedLesson(lessonId: String, onComplete: (Boolean) -> Unit) {
-        onComplete(DataManager.hasStartedLesson(lessonId))
+        DataManager.hasStartedLesson(lessonId, onComplete)
     }
 
     fun isLessonCompleted(lessonId: String, onComplete: (Boolean) -> Unit) {
-        onComplete(DataManager.isLessonCompleted(lessonId))
+        DataManager.isLessonCompleted(lessonId, onComplete)
     }
 
     fun markLessonComplete(lessonId: String) {

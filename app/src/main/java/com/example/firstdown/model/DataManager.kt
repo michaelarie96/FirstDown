@@ -1616,12 +1616,12 @@ object DataManager {
         FirestoreManager.saveUserProgress(userProgress)
     }
 
-    fun getCurrentUser(): User {
+    fun getCurrentUser(onComplete: (User) -> Unit) {
         val firebaseUser = FirebaseAuth.getInstance().currentUser
 
         if (firebaseUser != null) {
             // Create a User object from Firebase
-            return User(
+            onComplete(User(
                 id = firebaseUser.uid,
                 name = firebaseUser.displayName ?: "Football Fan",
                 email = firebaseUser.email ?: "",
@@ -1633,10 +1633,10 @@ object DataManager {
                 coursesCompleted = completedCourses.size,
                 quizScores = emptyList(),
                 timeSpent = 0
-            )
+            ))
         } else {
             // Fall back to default user
-            return User(
+            onComplete(User(
                 id = "user123",
                 name = "John Thompson",
                 email = "john@example.com",
@@ -1647,7 +1647,7 @@ object DataManager {
                 coursesCompleted = completedCourses.size,
                 quizScores = listOf(85, 90, 92, 88),
                 timeSpent = 24 * 60 // 24 hours in minutes
-            )
+            ))
         }
     }
 
@@ -1707,23 +1707,22 @@ object DataManager {
         }
     }
 
-    // Simplified method that returns cached lesson if available
-    fun getLessonById(id: String): Lesson? {
+    fun getCachedLessonById(id: String): Lesson? {
         return lessons[id]
     }
 
-    fun markLessonComplete(lessonId: String) {
+    fun markLessonComplete(lessonId: String, onComplete: () -> Unit = {}) {
         completedLessons.add(lessonId)
         startedLessons.add(lessonId)
 
         // Mark the chapter as started
-        getLessonById(lessonId)?.let { lesson ->
+        getCachedLessonById(lessonId)?.let { lesson ->
             startedChapters.add(lesson.chapterId)
         }
 
         saveProgress()
 
-        FirestoreManager.markLessonComplete(lessonId)
+        FirestoreManager.markLessonComplete(lessonId, onComplete)
 
         Log.d("DataManager", "Lesson $lessonId marked as completed")
     }
@@ -1771,16 +1770,16 @@ object DataManager {
         onComplete(completedLessons.contains(lessonId))
     }
 
+    fun isLessonCompletedSync(lessonId: String): Boolean {
+        return completedLessons.contains(lessonId)
+    }
+
     fun hasStartedChapter(chapterId: String, onComplete: (Boolean) -> Unit) {
         onComplete(startedChapters.contains(chapterId))
     }
 
     fun hasStartedLesson(lessonId: String, onComplete: (Boolean) -> Unit) {
         onComplete(startedLessons.contains(lessonId))
-    }
-
-    fun hasStartedAnyLearning(onComplete: (Boolean) -> Unit) {
-        onComplete(hasStartedLearning)
     }
 
     fun getLessonsForChapter(chapterId: String, onComplete: (List<Lesson>) -> Unit) {
@@ -1823,7 +1822,9 @@ object DataManager {
         }
     }
 
-    fun hasStartedLearning(): Boolean = hasStartedLearning
+    fun hasStartedLearning(onComplete: (Boolean) -> Unit) {
+        onComplete(hasStartedLearning)
+    }
 
     fun setStartedLearning(started: Boolean) {
         hasStartedLearning = started
@@ -1954,10 +1955,6 @@ object DataManager {
     fun addAchievement(achievement: Achievement) {
         achievements.add(achievement)
         // In a future implementation, we'd save this to Firestore
-    }
-
-    fun getLatestAchievement(): Achievement? {
-        return achievements.maxByOrNull { it.earnedDate }
     }
 
     fun getAllPosts(onComplete: (List<Post>) -> Unit) {
