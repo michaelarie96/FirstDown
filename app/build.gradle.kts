@@ -77,4 +77,8 @@ dependencies {
     // Firestore
     implementation(libs.firebase.firestore.ktx.v2491)
     implementation(libs.kotlinx.coroutines.play.services)
+
+    // Gson
+    implementation(libs.gson)
+
 }
