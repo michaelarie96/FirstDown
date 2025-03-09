@@ -47,20 +47,31 @@ class ChaptersFragment : Fragment(), ChapterAdapter.ChapterClickListener {
         val courseId = args.courseId
 
         // Get course from ViewModel
-        course = if (courseId.isNotEmpty()) {
-            viewModel.getCourseById(courseId) ?: viewModel.getDefaultCourse()
+        if (courseId.isNotEmpty()) {
+            viewModel.getCourseById(courseId) { course ->
+                if (course != null) {
+                    setupCourseUI(course)
+                } else {
+                    viewModel.getDefaultCourse { defaultCourse ->
+                        setupCourseUI(defaultCourse)
+                    }
+                }
+            }
         } else {
-            viewModel.getDefaultCourse()
+            viewModel.getDefaultCourse { defaultCourse ->
+                setupCourseUI(defaultCourse)
+            }
         }
+    }
 
-        // Set the course name in the title
+    private fun setupCourseUI(course: Course) {
+        this.course = course
+
         binding.tvCourseTitle.text = course.title
 
-        // Set progress values
         binding.tvProgressPercent.text = "${course.progress}% Complete"
         binding.progressBar.progress = course.progress
 
-        // Setup RecyclerView and adapter
         setupRecyclerView()
     }
 
@@ -71,7 +82,6 @@ class ChaptersFragment : Fragment(), ChapterAdapter.ChapterClickListener {
     }
 
     private fun setupListeners() {
-        // Setup back button
         binding.btnBack.setOnClickListener {
             findNavController().navigateUp()
         }
@@ -83,9 +93,10 @@ class ChaptersFragment : Fragment(), ChapterAdapter.ChapterClickListener {
 
             if (nextChapter != null) {
                 // Get the next lesson from the chapter
-                val lesson = viewModel.getNextLesson(nextChapter)
-                if (lesson != null) {
-                    navigateToLesson(lesson)
+                viewModel.getNextLesson(nextChapter) { lesson ->
+                    if (lesson != null) {
+                        navigateToLesson(lesson)
+                    }
                 }
             } else {
                 // If all lessons are complete, find a chapter with an incomplete quiz
@@ -108,7 +119,6 @@ class ChaptersFragment : Fragment(), ChapterAdapter.ChapterClickListener {
             }
         }
     }
-
     private fun navigateToLesson(lesson: Lesson) {
         val action = ChaptersFragmentDirections.actionChaptersFragmentToLessonFragment(
             lessonId = lesson.id
@@ -122,10 +132,11 @@ class ChaptersFragment : Fragment(), ChapterAdapter.ChapterClickListener {
                 // Chapter lessons complete but quiz not completed - go to quiz
                 navigateToQuiz(chapter)
             } else {
-                // Go to lesson
-                val lesson = viewModel.getNextLesson(chapter)
-                if (lesson != null) {
-                    navigateToLesson(lesson)
+                // Go to lesson with proper callback
+                viewModel.getNextLesson(chapter) { lesson ->
+                    if (lesson != null) {
+                        navigateToLesson(lesson)
+                    }
                 }
             }
         }

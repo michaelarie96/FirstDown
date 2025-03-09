@@ -41,17 +41,14 @@ class ProfileFragment : Fragment() {
     }
 
     private fun setupUI() {
-        // Get current user from ViewModel
-        val currentUser = viewModel.getCurrentUser()
+        viewModel.getCurrentUser { currentUser ->
+            binding.tvUserName.text = currentUser.name
+            binding.tvUserTitle.text = currentUser.title
 
-        // Set up user information
-        binding.tvUserName.text = currentUser.name
-        binding.tvUserTitle.text = currentUser.title
-
-        // Set up statistics
-        binding.tvLessonsCount.text = currentUser.lessonsCompleted.toString()
-        binding.tvScorePercent.text = "${currentUser.averageQuizScore}%"
-        binding.tvTimeSpent.text = "${currentUser.timeSpent / 60}h"
+            binding.tvLessonsCount.text = currentUser.lessonsCompleted.toString()
+            binding.tvScorePercent.text = "${currentUser.averageQuizScore}%"
+            binding.tvTimeSpent.text = "${currentUser.timeSpent / 60}h"
+        }
     }
 
     private fun setupListeners() {

@@ -42,45 +42,35 @@ class QuizFragment : Fragment() {
     }
 
     private fun setupUI() {
-        // Extract data from arguments
         chapterId = args.chapterId
         chapterTitle = args.chapterTitle
 
-        // Set quiz title
         binding.tvBackToLesson.text = "Back to $chapterTitle"
         binding.tvQuestionCounter.text = "Quiz"
 
-        // Update progress indicator
         binding.progressBar.max = 100
         binding.progressBar.progress = 50  // Since we have a single quiz, show 50% progress
 
-        // Display the quiz
         displayQuiz()
     }
 
     private fun displayQuiz() {
-        // Get the quiz for this chapter
-        val quiz = viewModel.getQuizForChapter(chapterId)
+        viewModel.getQuizForChapter(chapterId) { quiz ->
+            if (quiz != null) {
+                binding.tvQuestion.text = quiz.question
 
-        if (quiz != null) {
-            // Set question text
-            binding.tvQuestion.text = quiz.question
+                binding.radioGroup.clearCheck()
+                selectedAnswerIndex = -1
 
-            // Clear radio group selection
-            binding.radioGroup.clearCheck()
-            selectedAnswerIndex = -1
-
-            // Set up options
-            setupQuizOptions(quiz)
-        } else {
-            // Handle case where quiz couldn't be loaded
-            Toast.makeText(requireContext(), "Could not load quiz", Toast.LENGTH_SHORT).show()
-            findNavController().navigateUp()
+                setupQuizOptions(quiz)
+            } else {
+                Toast.makeText(requireContext(), "Could not load quiz", Toast.LENGTH_SHORT).show()
+                findNavController().navigateUp()
+            }
         }
     }
 
     private fun setupQuizOptions(quiz: Quiz) {
-        // Get all radio buttons
         val radioButtons = listOf(
             binding.radioOption1,
             binding.radioOption2,
@@ -136,26 +126,20 @@ class QuizFragment : Fragment() {
     }
 
     private fun handleAnswerSubmission() {
-        // Check if answer is correct
-        val isCorrect = viewModel.isAnswerCorrect(chapterId, selectedAnswerIndex)
+        viewModel.isAnswerCorrect(chapterId, selectedAnswerIndex) { isCorrect ->
+            val score = if (isCorrect) 100 else 0
 
-        // Calculate a score (100 for correct, 0 for incorrect)
-        val score = if (isCorrect) 100 else 0
+            val feedbackMessage = if (isCorrect) "Correct!" else "Incorrect!"
+            Toast.makeText(requireContext(), feedbackMessage, Toast.LENGTH_SHORT).show()
 
-        // Show feedback
-        val feedbackMessage = if (isCorrect) "Correct!" else "Incorrect!"
-        Toast.makeText(requireContext(), feedbackMessage, Toast.LENGTH_SHORT).show()
+            // Mark quiz as completed
+            viewModel.markQuizCompleted(chapterId, score)
+            Toast.makeText(requireContext(), "Quiz completed! Your score: $score%", Toast.LENGTH_LONG).show()
 
-        // Mark quiz as completed
-        viewModel.markQuizCompleted(chapterId, score)
-
-        // Show completion message
-        Toast.makeText(requireContext(), "Quiz completed! Your score: $score%", Toast.LENGTH_LONG).show()
-
-        // Return to chapters screen
-        findNavController().popBackStack(R.id.ChaptersFragment, false)
+            // Return to chapters screen
+            findNavController().popBackStack(R.id.ChaptersFragment, false)
+        }
     }
-
     override fun onDestroyView() {
         super.onDestroyView()
         _binding = null

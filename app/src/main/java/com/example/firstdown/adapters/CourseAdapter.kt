@@ -69,43 +69,42 @@ class CourseAdapter(
             tvCourseTitle.text = course.title
             tvCourseDescription.text = course.description
 
-            // Handle locked state
-            val shouldBeLocked = DataManager.shouldCourseBeLocked(course.id)
-
-            if (shouldBeLocked) {
-                tvProgress.text = "Locked"
-                btnViewCourse.text = "Complete Previous Courses"
-                // Add lock icon to button
-                btnViewCourse.setCompoundDrawablesWithIntrinsicBounds(R.drawable.ic_lock, 0, 0, 0)
-                btnViewCourse.isEnabled = false
-                // Make progress bar gray
-                progressBar.progress = 0
-            } else {
-                // Course is unlocked
-                progressBar.progress = course.progress
-                tvProgress.text = "${course.progress}% Complete"
-
-                // Set button text based on progress
-                if (course.progress > 0) {
-                    btnViewCourse.text = "Continue"
+            DataManager.shouldCourseBeLocked(course.id) { isLocked ->
+                if (isLocked) {
+                    tvProgress.text = "Locked"
+                    btnViewCourse.text = "Complete Previous Courses"
+                    // Add lock icon to button
+                    btnViewCourse.setCompoundDrawablesWithIntrinsicBounds(R.drawable.ic_lock, 0, 0, 0)
+                    btnViewCourse.isEnabled = false
+                    // Make progress bar gray
+                    progressBar.progress = 0
                 } else {
-                    btnViewCourse.text = "Start"
+                    // Course is unlocked
+                    progressBar.progress = course.progress
+                    tvProgress.text = "${course.progress}% Complete"
+
+                    // Set button text based on progress
+                    if (course.progress > 0) {
+                        btnViewCourse.text = "Continue"
+                    } else {
+                        btnViewCourse.text = "Start"
+                    }
+
+                    btnViewCourse.setCompoundDrawablesWithIntrinsicBounds(0, 0, 0, 0)
+                    btnViewCourse.isEnabled = true
                 }
 
-                btnViewCourse.setCompoundDrawablesWithIntrinsicBounds(0, 0, 0, 0)
-                btnViewCourse.isEnabled = true
-            }
-
-            // Set click listeners
-            itemView.setOnClickListener {
-                if (!shouldBeLocked) {
-                    listener.onCourseClick(course)
+                // Set click listeners
+                itemView.setOnClickListener {
+                    if (!isLocked) {
+                        listener.onCourseClick(course)
+                    }
                 }
-            }
 
-            btnViewCourse.setOnClickListener {
-                if (!shouldBeLocked) {
-                    listener.onCourseClick(course)
+                btnViewCourse.setOnClickListener {
+                    if (!isLocked) {
+                        listener.onCourseClick(course)
+                    }
                 }
             }
         }

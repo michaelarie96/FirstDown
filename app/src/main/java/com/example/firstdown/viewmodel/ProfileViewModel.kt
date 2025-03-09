@@ -6,8 +6,7 @@ import com.example.firstdown.model.User
 
 class ProfileViewModel : ViewModel() {
 
-    // Get current user from DataManager
-    fun getCurrentUser(): User {
-        return DataManager.getCurrentUser()
+    fun getCurrentUser(onComplete: (User) -> Unit) {
+        onComplete(DataManager.getCurrentUser())
     }
 }

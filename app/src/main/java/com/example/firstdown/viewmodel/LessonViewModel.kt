@@ -7,54 +7,78 @@ import com.example.firstdown.model.Lesson
 
 class LessonViewModel : ViewModel() {
 
-    // Get lesson details
     fun getLessonById(lessonId: String): Lesson? {
         return DataManager.getLessonById(lessonId)
     }
 
-    // Mark lesson as completed
     fun markLessonComplete(lessonId: String) {
         DataManager.markLessonComplete(lessonId)
     }
 
-    // Get lesson content (text and optional image)
-    fun getLessonContent(lessonId: String): Pair<String, Int?> {
-        return DataManager.getLessonContent(lessonId)
+    fun getLessonContent(lessonId: String, onComplete: (Pair<String, Int?>) -> Unit) {
+        DataManager.getLessonById(lessonId) { lesson ->
+            if (lesson != null) {
+                onComplete(Pair(lesson.contentData, lesson.imageResId))
+            }
+        }
     }
 
-    // Get the chapter that contains this lesson
-    fun getChapterForLesson(lessonId: String): Chapter? {
-        val lesson = getLessonById(lessonId) ?: return null
-        return DataManager.getChapterById(lesson.chapterId)
+    fun getChapterForLesson(lessonId: String, onComplete: (Chapter?) -> Unit) {
+        DataManager.getLessonById(lessonId) { lesson ->
+            if (lesson == null) {
+                onComplete(null)
+                return@getLessonById
+            }
+            DataManager.getChapterById(lesson.chapterId, onComplete)
+        }
     }
 
-    // Get the next lesson in the same chapter
-    fun getNextLesson(currentLessonId: String): Lesson? {
-        val currentLesson = getLessonById(currentLessonId) ?: return null
-        val chapter = DataManager.getChapterById(currentLesson.chapterId) ?: return null
+    fun getNextLesson(currentLessonId: String, onComplete: (Lesson?) -> Unit) {
+        DataManager.getLessonById(currentLessonId) { currentLesson ->
+            if (currentLesson == null) {
+                onComplete(null)
+                return@getLessonById
+            }
 
-        // Find the current lesson's index
-        val currentIndex = currentLesson.index
+            DataManager.getChapterById(currentLesson.chapterId) { chapter ->
+                if (chapter == null) {
+                    onComplete(null)
+                    return@getChapterById
+                }
 
-        // Get the next lesson by index
-        return chapter.lessons.firstOrNull { it.index > currentIndex }
+                val currentIndex = currentLesson.index
+
+                val nextLesson = chapter.lessons.firstOrNull { it.index > currentIndex }
+                onComplete(nextLesson)
+            }
+        }
     }
 
-    // Get the previous lesson in the same chapter
-    fun getPreviousLesson(currentLessonId: String): Lesson? {
-        val currentLesson = getLessonById(currentLessonId) ?: return null
-        val chapter = DataManager.getChapterById(currentLesson.chapterId) ?: return null
+    fun getPreviousLesson(currentLessonId: String, onComplete: (Lesson?) -> Unit) {
+        DataManager.getLessonById(currentLessonId) { currentLesson ->
+            if (currentLesson == null) {
+                onComplete(null)
+                return@getLessonById
+            }
 
-        // Find the current lesson's index
-        val currentIndex = currentLesson.index
+            DataManager.getChapterById(currentLesson.chapterId) { chapter ->
+                if (chapter == null) {
+                    onComplete(null)
+                    return@getChapterById
+                }
 
-        // Get previous lessons sorted by index and take the last one
-        return chapter.lessons
-            .filter { it.index < currentIndex }
-            .maxByOrNull { it.index }
+                val currentIndex = currentLesson.index
+
+                val previousLesson = chapter.lessons
+                    .filter { it.index < currentIndex }
+                    .maxByOrNull { it.index }
+
+                onComplete(previousLesson)
+            }
+        }
     }
 
-    fun isLastLessonInChapter(lessonId: String): Boolean {
-        return DataManager.isLastLessonInChapter(lessonId)
+    fun isLastLessonInChapter(lessonId: String, onComplete: (Boolean) -> Unit) {
+        DataManager.isLastLessonInChapter(lessonId, onComplete)
     }
 }

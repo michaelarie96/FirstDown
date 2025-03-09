@@ -10,63 +10,51 @@ import com.example.firstdown.model.User
 
 class MainViewModel : ViewModel() {
 
-    // Get current user data from DataManager
-    fun getCurrentUser(): User {
-        return DataManager.getCurrentUser()
+    fun getCurrentUser(onComplete: (User) -> Unit) {
+        onComplete(DataManager.getCurrentUser())
     }
 
-    // Get next lesson to complete (for Today's Goal)
-    fun getNextLessonToComplete(): Lesson? {
-        return DataManager.getNextLessonToComplete()
+    fun getNextLessonToComplete(onComplete: (Lesson?) -> Unit) {
+        DataManager.getNextLessonToComplete(onComplete)
     }
 
-    // Check if lesson was completed today
-    fun wasLessonCompletedToday(lessonId: String): Boolean {
-        return DataManager.wasLessonCompletedToday(lessonId)
+    fun wasLessonCompletedToday(lessonId: String, onComplete: (Boolean) -> Unit) {
+        onComplete(DataManager.wasLessonCompletedToday(lessonId))
     }
 
-    // Get current or next chapter to study
-    fun getCurrentOrNextChapter(): Pair<Course, Chapter>? {
-        return DataManager.getCurrentOrNextChapter()
+    fun getCurrentOrNextChapter(onComplete: (Pair<Course, Chapter>?) -> Unit) {
+        DataManager.getCurrentOrNextChapter(onComplete)
     }
 
-    // Check if a chapter has been started
-    fun hasStartedChapter(chapterId: String): Boolean {
-        return DataManager.hasStartedChapter(chapterId)
+    fun hasStartedChapter(chapterId: String, onComplete: (Boolean) -> Unit) {
+        onComplete(DataManager.hasStartedChapter(chapterId))
     }
 
-    // Check if user has started any learning
-    fun hasStartedAnyLearning(): Boolean {
-        return DataManager.hasStartedLearning()
+    fun hasStartedAnyLearning(onComplete: (Boolean) -> Unit) {
+        onComplete(DataManager.hasStartedLearning())
     }
 
-    // Get the latest achievement
-    fun getLatestAchievement(): Achievement? {
-        return DataManager.getLatestAchievement()
+    fun getLatestAchievement(onComplete: (Achievement?) -> Unit) {
+        onComplete(DataManager.getLatestAchievement())
     }
 
-    // Get a random quick tip
-    fun getRandomQuickTip(): String {
-        return DataManager.getRandomQuickTip()
+    fun getRandomQuickTip(onComplete: (String) -> Unit) {
+        onComplete(DataManager.getRandomQuickTip())
     }
 
-    // Check if lesson has been started
-    fun hasStartedLesson(lessonId: String): Boolean {
-        return DataManager.hasStartedLesson(lessonId)
+    fun hasStartedLesson(lessonId: String, onComplete: (Boolean) -> Unit) {
+        onComplete(DataManager.hasStartedLesson(lessonId))
     }
 
-    // Check if lesson is completed
-    fun isLessonCompleted(lessonId: String): Boolean {
-        return DataManager.isLessonCompleted(lessonId)
+    fun isLessonCompleted(lessonId: String, onComplete: (Boolean) -> Unit) {
+        onComplete(DataManager.isLessonCompleted(lessonId))
     }
 
-    // Mark a lesson as completed
     fun markLessonComplete(lessonId: String) {
         DataManager.markLessonComplete(lessonId)
     }
 
-    // Get a lesson by ID
-    fun getLessonById(lessonId: String): Lesson? {
-        return DataManager.getLessonById(lessonId)
+    fun getLessonById(lessonId: String, onComplete: (Lesson?) -> Unit) {
+        DataManager.getLessonById(lessonId, onComplete)
     }
 }

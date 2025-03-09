@@ -1767,6 +1767,22 @@ object DataManager {
         return completedQuizzes.contains(chapterId)
     }
 
+    fun isLessonCompleted(lessonId: String, onComplete: (Boolean) -> Unit) {
+        onComplete(completedLessons.contains(lessonId))
+    }
+
+    fun hasStartedChapter(chapterId: String, onComplete: (Boolean) -> Unit) {
+        onComplete(startedChapters.contains(chapterId))
+    }
+
+    fun hasStartedLesson(lessonId: String, onComplete: (Boolean) -> Unit) {
+        onComplete(startedLessons.contains(lessonId))
+    }
+
+    fun hasStartedAnyLearning(onComplete: (Boolean) -> Unit) {
+        onComplete(hasStartedLearning)
+    }
+
     fun getLessonsForChapter(chapterId: String, onComplete: (List<Lesson>) -> Unit) {
         val sharedPrefs = SharedPreferencesManager.getInstance()
         val isDatabaseInitialized = sharedPrefs.getBoolean(SPKeys.DATABASE_INITIALIZED, false)
@@ -1787,6 +1803,10 @@ object DataManager {
             val nextLesson = chapterLessons.firstOrNull { !completedLessons.contains(it.id) }
             onComplete(nextLesson)
         }
+    }
+
+    fun getLatestAchievement(onComplete: (Achievement?) -> Unit) {
+        onComplete(achievements.maxByOrNull { it.earnedDate })
     }
 
     fun isLastLessonInChapter(lessonId: String, onComplete: (Boolean) -> Unit) {
@@ -1810,10 +1830,8 @@ object DataManager {
         saveProgress()
     }
 
-    fun wasLessonCompletedToday(lessonId: String): Boolean {
-        // For now, just check if the lesson is completed
-        // In a future, we might want to store completion dates
-        return completedLessons.contains(lessonId)
+    fun wasLessonCompletedToday(lessonId: String, onComplete: (Boolean) -> Unit) {
+        onComplete(completedLessons.contains(lessonId))
     }
 
     fun getNextLessonToComplete(onComplete: (Lesson?) -> Unit) {
@@ -1929,8 +1947,8 @@ object DataManager {
         }
     }
 
-    fun getRandomQuickTip(): String {
-        return quickTips.random()
+    fun getRandomQuickTip(onComplete: (String) -> Unit) {
+        onComplete(quickTips.random())
     }
 
     fun addAchievement(achievement: Achievement) {

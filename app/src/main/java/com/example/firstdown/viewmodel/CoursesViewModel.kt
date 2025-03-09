@@ -6,13 +6,11 @@ import com.example.firstdown.model.DataManager
 
 class CoursesViewModel : ViewModel() {
 
-    // Get all available courses
-    fun getAllCourses(): List<Course> {
-        return DataManager.getAllCourses()
+    fun getAllCourses(onComplete: (List<Course>) -> Unit) {
+        DataManager.getAllCourses(onComplete)
     }
 
-    // Get a specific course by ID
-    fun getCourseById(courseId: String): Course? {
-        return DataManager.getCourseById(courseId)
+    fun getCourseById(courseId: String, onComplete: (Course?) -> Unit) {
+        DataManager.getCourseById(courseId, onComplete)
     }
 }

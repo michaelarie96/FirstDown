@@ -51,10 +51,8 @@ class LessonFragment : Fragment() {
     }
 
     private fun setupUI() {
-        // Extract data from arguments
         lessonId = args.lessonId
 
-        // Get lesson data
         val lesson = viewModel.getLessonById(lessonId)
         if (lesson == null) {
             Toast.makeText(context, "Error loading lesson", Toast.LENGTH_SHORT).show()
@@ -62,81 +60,82 @@ class LessonFragment : Fragment() {
             return
         }
 
-        // Set lesson title
         binding.tvLessonTitle.text = lesson.title
 
-        // Display lesson content
         displayLessonContent(lesson)
     }
 
     private fun displayLessonContent(lesson: Lesson) {
-        // Get content data
-        val (contentText, imageResId) = viewModel.getLessonContent(lesson.id)
+        viewModel.getLessonContent(lesson.id) { (contentText, imageResId) ->
+            // Clear previous content
+            binding.lessonContentLayout.removeAllViews()
 
-        // Clear previous content
-        binding.lessonContentLayout.removeAllViews()
 
-        // Display content based on type
-        when (lesson.contentType) {
-            ContentType.TEXT -> {
-                // Display text content
-                val textView = TextView(requireContext()).apply {
-                    text = contentText
-                    textSize = 16f
-                    setTextColor(ContextCompat.getColor(requireContext(), R.color.text_primary))
-                    layoutParams = LinearLayout.LayoutParams(
-                        LinearLayout.LayoutParams.MATCH_PARENT,
-                        LinearLayout.LayoutParams.WRAP_CONTENT
-                    )
-                }
-                binding.lessonContentLayout.addView(textView)
-            }
-            ContentType.IMAGE -> {
-                // Display text and image content
-                val textView = TextView(requireContext()).apply {
-                    text = contentText
-                    textSize = 16f
-                    setTextColor(ContextCompat.getColor(requireContext(), R.color.text_primary))
-                    layoutParams = LinearLayout.LayoutParams(
-                        LinearLayout.LayoutParams.MATCH_PARENT,
-                        LinearLayout.LayoutParams.WRAP_CONTENT
-                    )
-                }
-
-                val imageView = ImageView(requireContext()).apply {
-                    if (imageResId != null) {
-                        setImageResource(imageResId)
+            // Display content based on type
+            when (lesson.contentType) {
+                ContentType.TEXT -> {
+                    // Display text content
+                    val textView = TextView(requireContext()).apply {
+                        text = contentText
+                        textSize = 16f
+                        setTextColor(ContextCompat.getColor(requireContext(), R.color.text_primary))
+                        layoutParams = LinearLayout.LayoutParams(
+                            LinearLayout.LayoutParams.MATCH_PARENT,
+                            LinearLayout.LayoutParams.WRAP_CONTENT
+                        )
                     }
-                    contentDescription = "Lesson image"
-                    scaleType = ImageView.ScaleType.FIT_CENTER
-                    layoutParams = LinearLayout.LayoutParams(
-                        LinearLayout.LayoutParams.MATCH_PARENT,
-                        500 // Height in pixels
-                    ).apply {
-                        setMargins(0, 16, 0, 16) // Margins in pixels
-                    }
+                    binding.lessonContentLayout.addView(textView)
                 }
 
-                binding.lessonContentLayout.addView(textView)
-                binding.lessonContentLayout.addView(imageView)
-            }
-            ContentType.VIDEO -> {
-                // Handle video content (placeholder for now)
-                val textView = TextView(requireContext()).apply {
-                    text = "Video content: $contentText"
-                    textSize = 16f
-                    setTextColor(ContextCompat.getColor(requireContext(), R.color.text_primary))
+                ContentType.IMAGE -> {
+                    // Display text and image content
+                    val textView = TextView(requireContext()).apply {
+                        text = contentText
+                        textSize = 16f
+                        setTextColor(ContextCompat.getColor(requireContext(), R.color.text_primary))
+                        layoutParams = LinearLayout.LayoutParams(
+                            LinearLayout.LayoutParams.MATCH_PARENT,
+                            LinearLayout.LayoutParams.WRAP_CONTENT
+                        )
+                    }
+
+                    val imageView = ImageView(requireContext()).apply {
+                        if (imageResId != null) {
+                            setImageResource(imageResId)
+                        }
+                        contentDescription = "Lesson image"
+                        scaleType = ImageView.ScaleType.FIT_CENTER
+                        layoutParams = LinearLayout.LayoutParams(
+                            LinearLayout.LayoutParams.MATCH_PARENT,
+                            500 // Height in pixels
+                        ).apply {
+                            setMargins(0, 16, 0, 16) // Margins in pixels
+                        }
+                    }
+
+                    binding.lessonContentLayout.addView(textView)
+                    binding.lessonContentLayout.addView(imageView)
                 }
-                binding.lessonContentLayout.addView(textView)
-            }
-            ContentType.INTERACTIVE -> {
-                // Handle interactive content (placeholder for now)
-                val textView = TextView(requireContext()).apply {
-                    text = "Interactive content: $contentText"
-                    textSize = 16f
-                    setTextColor(ContextCompat.getColor(requireContext(), R.color.text_primary))
+
+                ContentType.VIDEO -> {
+                    // Handle video content (placeholder for now)
+                    val textView = TextView(requireContext()).apply {
+                        text = "Video content: $contentText"
+                        textSize = 16f
+                        setTextColor(ContextCompat.getColor(requireContext(), R.color.text_primary))
+                    }
+                    binding.lessonContentLayout.addView(textView)
                 }
-                binding.lessonContentLayout.addView(textView)
+
+                ContentType.INTERACTIVE -> {
+                    // Handle interactive content (placeholder for now)
+                    val textView = TextView(requireContext()).apply {
+                        text = "Interactive content: $contentText"
+                        textSize = 16f
+                        setTextColor(ContextCompat.getColor(requireContext(), R.color.text_primary))
+                    }
+                    binding.lessonContentLayout.addView(textView)
+                }
             }
         }
     }
@@ -159,17 +158,16 @@ class LessonFragment : Fragment() {
     }
 
     private fun navigateToPreviousLesson() {
-        val previousLesson = viewModel.getPreviousLesson(lessonId)
-
-        if (previousLesson != null) {
-            // Navigate to previous lesson
-            val action = LessonFragmentDirections.actionLessonFragmentSelf(
-                lessonId = previousLesson.id
-            )
-            findNavController().navigate(action)
-        } else {
-            // If no previous lesson, go back to chapter list
-            findNavController().navigateUp()
+        viewModel.getPreviousLesson(lessonId) { previousLesson ->
+            if (previousLesson != null) {
+                val action = LessonFragmentDirections.actionLessonFragmentSelf(
+                    lessonId = previousLesson.id
+                )
+                findNavController().navigate(action)
+            } else {
+                // If no previous lesson, go back to chapter list
+                findNavController().navigateUp()
+            }
         }
     }
 
@@ -178,52 +176,53 @@ class LessonFragment : Fragment() {
         viewModel.markLessonComplete(lessonId)
 
         // Check if this is the last lesson in the chapter
-        if (viewModel.isLastLessonInChapter(lessonId)) {
-            // If it's the last lesson, navigate to the chapter quiz
-            val chapter = viewModel.getChapterForLesson(lessonId)
-            if (chapter?.quiz != null) {
-                navigateToQuiz()
+        viewModel.isLastLessonInChapter(lessonId) { isLastLesson ->
+            if (isLastLesson) {
+                // Get the chapter quiz
+                viewModel.getChapterForLesson(lessonId) { chapter ->
+                    if (chapter?.quiz != null) {
+                        navigateToQuiz()
+                    } else {
+                        // If there's no quiz (Shouldn't happen), go back to chapter list
+                        findNavController().navigateUp()
+                    }
+                }
             } else {
-                // If there's no quiz, go back to chapter list
-                findNavController().navigateUp()
-            }
-        } else {
-            // If not the last lesson, go to the next lesson
-            val nextLesson = viewModel.getNextLesson(lessonId)
-            if (nextLesson != null) {
-                // Navigate to next lesson
-                val action = LessonFragmentDirections.actionLessonFragmentSelf(
-                    lessonId = nextLesson.id
-                )
-                findNavController().navigate(action)
-            } else {
-                // If no next lesson (unusual case), go back to chapter list
-                findNavController().navigateUp()
+                // If not the last lesson, go to the next lesson
+                viewModel.getNextLesson(lessonId) { nextLesson ->
+                    if (nextLesson != null) {
+                        // Navigate to next lesson
+                        val action = LessonFragmentDirections.actionLessonFragmentSelf(
+                            lessonId = nextLesson.id
+                        )
+                        findNavController().navigate(action)
+                    } else {
+                        // If no next lesson (Shouldn't happen), go back to chapter list
+                        findNavController().navigateUp()
+                    }
+                }
             }
         }
     }
+
     private fun navigateToQuiz() {
-        // Find which chapter this lesson belongs to
-        val chapter = viewModel.getChapterForLesson(lessonId)
-
-        if (chapter != null) {
-            // Navigate to the chapter's quiz if it exists
-            if (chapter.quiz != null) {
-                val action = LessonFragmentDirections.actionLessonFragmentToQuizFragment(
-                    chapterId = chapter.id,
-                    chapterTitle = chapter.title
-                )
-                findNavController().navigate(action)
+        viewModel.getChapterForLesson(lessonId) { chapter ->
+            if (chapter != null) {
+                if (chapter.quiz != null) {
+                    val action = LessonFragmentDirections.actionLessonFragmentToQuizFragment(
+                        chapterId = chapter.id,
+                        chapterTitle = chapter.title
+                    )
+                    findNavController().navigate(action)
+                } else {
+                    Toast.makeText(requireContext(), "No quiz available for this chapter", Toast.LENGTH_SHORT).show()
+                    findNavController().navigateUp()
+                }
             } else {
-                Toast.makeText(requireContext(), "No quiz available for this chapter", Toast.LENGTH_SHORT).show()
-                findNavController().navigateUp()
+                Toast.makeText(requireContext(), "Quiz not available", Toast.LENGTH_SHORT).show()
             }
-        } else {
-            // Handle case where parent chapter couldn't be found
-            Toast.makeText(requireContext(), "Quiz not available", Toast.LENGTH_SHORT).show()
         }
     }
-
     override fun onDestroyView() {
         super.onDestroyView()
         _binding = null

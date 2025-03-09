@@ -97,19 +97,21 @@ class CommunityFragment : Fragment(), PostAdapter.PostInteractionListener {
 
     private fun applyFiltersAndDisplayPosts() {
         // Apply both tab filter and search query
-        val filteredPosts = if (currentSearchQuery.isNotEmpty()) {
-            viewModel.searchPosts(currentSearchQuery)
+        if (currentSearchQuery.isNotEmpty()) {
+            viewModel.searchPosts(currentSearchQuery) { filteredPosts ->
+                displayFilteredPosts(filteredPosts)
+            }
         } else {
-            viewModel.filterPostsByType(currentTabPosition)
+            viewModel.filterPostsByType(currentTabPosition) { filteredPosts ->
+                displayFilteredPosts(filteredPosts)
+            }
         }
-
-        displayFilteredPosts(filteredPosts)
     }
 
     private fun displayPosts() {
-        // Get all posts from ViewModel
-        val allPosts = viewModel.getAllPosts()
-        displayFilteredPosts(allPosts)
+        viewModel.getAllPosts { allPosts ->
+            displayFilteredPosts(allPosts)
+        }
     }
 
     private fun displayFilteredPosts(posts: List<Post>) {
@@ -129,11 +131,12 @@ class CommunityFragment : Fragment(), PostAdapter.PostInteractionListener {
 
     override fun onLikeClicked(post: Post, position: Int) {
         // Update like count through ViewModel
-        val updatedLikes = viewModel.toggleLike(post.id)
-        Toast.makeText(requireContext(), "Liked! Total likes: $updatedLikes", Toast.LENGTH_SHORT).show()
+        viewModel.toggleLike(post.id) { updatedLikes ->
+            Toast.makeText(requireContext(), "Liked! Total likes: $updatedLikes", Toast.LENGTH_SHORT).show()
 
-        // Refresh the post list
-        displayPosts()
+            // Refresh the post list
+            displayPosts()
+        }
     }
 
     override fun onCommentClicked(post: Post, position: Int) {

@@ -35,14 +35,11 @@ class CoursesFragment : Fragment(), CourseAdapter.OnCourseClickListener {
     }
 
     private fun setupUI() {
-        // Set up the RecyclerView
         setupRecyclerView()
 
-        // Get courses from ViewModel
-        val courses = viewModel.getAllCourses()
-
-        // Update the adapter with the courses
-        courseAdapter.updateCourses(courses)
+        viewModel.getAllCourses { courses ->
+            courseAdapter.updateCourses(courses)
+        }
     }
 
     private fun setupRecyclerView() {

@@ -44,13 +44,13 @@ class HomeFragment : Fragment() {
     }
 
     private fun setupUI() {
-        // Get data from ViewModel
-        val currentUser = viewModel.getCurrentUser()
-        setupUserInfo(currentUser)
-        setupTodayGoal()
-        setupContinueLearning()
-        setupLatestAchievement()
-        setupQuickTip()
+        viewModel.getCurrentUser { currentUser ->
+            setupUserInfo(currentUser)
+            setupTodayGoal()
+            setupContinueLearning()
+            setupLatestAchievement()
+            setupQuickTip()
+        }
     }
 
     private fun setupUserInfo(currentUser: User) {
@@ -59,51 +59,54 @@ class HomeFragment : Fragment() {
     }
 
     private fun setupTodayGoal() {
-        // Get the next lesson to complete
-        val nextLesson = viewModel.getNextLessonToComplete()
+        viewModel.getNextLessonToComplete { nextLesson ->
+            if (nextLesson != null) {
+                binding.tvGoalDescription.text = getString(R.string.complete_lesson_goal, nextLesson.title)
 
-        if (nextLesson != null) {
-            binding.tvGoalDescription.text = getString(R.string.complete_lesson_goal, nextLesson.title)
-
-            // Check if lesson was completed today
-            val isCompleted = viewModel.wasLessonCompletedToday(nextLesson.id)
-            binding.cbGoalCompleted.isChecked = isCompleted
-            binding.cbGoalCompleted.isEnabled = false // Disable user interaction
-
-        } else {
-            // No more lessons to complete
-            binding.tvGoalDescription.text = getString(R.string.all_lessons_completed)
-            binding.cbGoalCompleted.isChecked = true
-            binding.cbGoalCompleted.isEnabled = false
+                viewModel.wasLessonCompletedToday(nextLesson.id) { isCompleted ->
+                    binding.cbGoalCompleted.isChecked = isCompleted
+                    binding.cbGoalCompleted.isEnabled = false
+                }
+            } else {
+                // No more lessons to complete
+                binding.tvGoalDescription.text = getString(R.string.all_lessons_completed)
+                binding.cbGoalCompleted.isChecked = true
+                binding.cbGoalCompleted.isEnabled = false
+            }
         }
     }
 
     private fun setupContinueLearning() {
-        val courseChapterPair = viewModel.getCurrentOrNextChapter()
+        viewModel.getCurrentOrNextChapter { courseChapterPair ->
+            if (courseChapterPair != null) {
+                val (course, chapter) = courseChapterPair
 
-        if (courseChapterPair != null) {
-            val (course, chapter) = courseChapterPair
+                if (isFirstTimeUser || !viewModel.hasStartedAnyLearning()) {
+                    binding.tvLearningStatus.text = getString(R.string.start_learning)
+                } else {
+                    binding.tvLearningStatus.text = getString(R.string.continue_learning)
+                }
 
-            // Set the title based on user's learning status
-            if (isFirstTimeUser || !viewModel.hasStartedAnyLearning()) {
-                binding.tvLearningStatus.text = getString(R.string.start_learning)
+                binding.tvLessonTitle.text = course.title
+                binding.tvLessonDescription.text = chapter.title
+
+                if (viewModel.hasStartedChapter(chapter.id)) {
+                    binding.btnStart.text = getString(R.string.continue_learning_button)
+                } else {
+                    binding.btnStart.text = getString(R.string.start_learning)
+                }
+
+                // Setup button listener
+                binding.btnStart.setOnClickListener {
+                    val lesson = chapter.lessons.find { !it.isCompleted }
+                    if (lesson != null) {
+                        navigateToLesson(lesson.id, lesson.title)
+                    }
+                }
             } else {
-                binding.tvLearningStatus.text = getString(R.string.continue_learning)
+                // Handle the case where no courses/chapters are available (Shouldn't happen)
+                binding.cardNextLesson.visibility = View.GONE
             }
-
-            // Set course and chapter info
-            binding.tvLessonTitle.text = course.title
-            binding.tvLessonDescription.text = chapter.title
-
-            // Set the button text based on chapter status
-            if (viewModel.hasStartedChapter(chapter.id)) {
-                binding.btnStart.text = getString(R.string.continue_learning_button)
-            } else {
-                binding.btnStart.text = getString(R.string.start_learning)
-            }
-        } else {
-            // Handle the case where no courses/chapters are available
-            binding.cardNextLesson.visibility = View.GONE
         }
     }
 
@@ -111,10 +114,8 @@ class HomeFragment : Fragment() {
         val latestAchievement = viewModel.getLatestAchievement()
 
         if (latestAchievement != null) {
-            // Find the achievement card in the layout
             val achievementCard = binding.layoutAchievements.getChildAt(0)
 
-            // Update achievement details
             val tvAchievementTitle = achievementCard.findViewById<TextView>(R.id.tv_achievement_title)
             val tvAchievementDesc = achievementCard.findViewById<TextView>(R.id.tv_achievement_description)
             val tvAchievementDate = achievementCard.findViewById<TextView>(R.id.tv_achievement_date)
@@ -122,17 +123,14 @@ class HomeFragment : Fragment() {
             tvAchievementTitle.text = latestAchievement.title
             tvAchievementDesc.text = latestAchievement.description
 
-            // Format the date (for simplicity showing "X days ago")
             val daysAgo = (System.currentTimeMillis() - latestAchievement.earnedDate) / (1000 * 60 * 60 * 24)
             tvAchievementDate.text = getString(R.string.earned_days_ago, daysAgo.toInt())
         }
     }
 
     private fun setupQuickTip() {
-        // Get a random tip
         val quickTip = viewModel.getRandomQuickTip()
 
-        // Find the quick tip card in the layout
         val tipCard = binding.layoutAchievements.getChildAt(1)
         val tvTipContent = tipCard.findViewById<TextView>(R.id.tv_tip_content)
 

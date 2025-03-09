@@ -1,6 +1,7 @@
 package com.example.firstdown.viewmodel
 
 import androidx.lifecycle.ViewModel
+import com.example.firstdown.R
 import com.example.firstdown.model.Chapter
 import com.example.firstdown.model.Course
 import com.example.firstdown.model.DataManager
@@ -8,29 +9,51 @@ import com.example.firstdown.model.Lesson
 
 class ChaptersViewModel : ViewModel() {
 
-    // Get course by ID
-    fun getCourseById(courseId: String): Course? {
-        return DataManager.getCourseById(courseId)
+    fun getCourseById(courseId: String, onComplete: (Course?) -> Unit) {
+        DataManager.getCourseById(courseId, onComplete)
     }
 
-    // Get default course if ID is not provided
-    fun getDefaultCourse(): Course {
-        return DataManager.getCurrentCourse()
+    fun getDefaultCourse(onComplete: (Course) -> Unit) {
+        DataManager.getCourseById("football-basics") { course ->
+            if (course != null) {
+                onComplete(course)
+            } else {
+                // Fallback to first course if default not found
+                DataManager.getAllCourses { courses ->
+                    if (courses.isNotEmpty()) {
+                        onComplete(courses.first())
+                    } else {
+                        // Create an empty course as last resort
+                        onComplete(Course(
+                            id = "empty",
+                            title = "No Courses Available",
+                            description = "Please try again later",
+                            imageResId = R.drawable.football_field_bg,
+                            chapters = emptyList()
+                        ))
+                    }
+                }
+            }
+        }
     }
 
-    // Get chapter by ID
-    fun getChapterById(chapterId: String): Chapter? {
-        return DataManager.getChapterById(chapterId)
+    fun getChapterById(chapterId: String, onComplete: (Chapter?) -> Unit) {
+        DataManager.getChapterById(chapterId, onComplete)
     }
 
-    // Get the first lesson from a chapter
-    fun getFirstLesson(chapter: Chapter): Lesson? {
-        return if (chapter.lessons.isNotEmpty()) chapter.lessons.first() else null
+    fun getFirstLesson(chapter: Chapter, onComplete: (Lesson?) -> Unit) {
+        if (chapter.lessons.isNotEmpty()) {
+            onComplete(chapter.lessons.first())
+        } else {
+            onComplete(null)
+        }
     }
 
-    // Get the next lesson in a chapter
-    fun getNextLesson(chapter: Chapter): Lesson? {
-        // Find the first incomplete lesson in the chapter
-        return DataManager.getNextLessonInChapter(chapter.id)
+    fun getNextLesson(chapter: Chapter, onComplete: (Lesson?) -> Unit) {
+        DataManager.getNextLessonInChapter(chapter.id, onComplete)
+    }
+
+    fun hasStartedChapter(chapterId: String, onComplete: (Boolean) -> Unit) {
+        onComplete(DataManager.hasStartedChapter(chapterId))
     }
 }
