@@ -165,10 +165,9 @@
                 android:id="@+id/iv_football"
                 android:layout_width="64dp"
                 android:layout_height="64dp"
-                android:background="@drawable/bg_circle_dark"
+                android:background="@drawable/ic_football"
                 android:contentDescription="@string/iv_football_desc"
                 android:padding="@dimen/margin_medium"
-                android:src="@drawable/ic_football"
                 app:layout_constraintStart_toStartOf="parent"
                 app:layout_constraintTop_toTopOf="parent" />
 
