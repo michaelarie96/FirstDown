@@ -24,7 +24,7 @@ data class Chapter(
     // Chapter is fully completed if all lessons are completed and quiz is completed
     val isCompleted: Boolean
         get() {
-            val allLessonsCompleted = lessons.all { it.isCompleted }
+            val allLessonsCompleted = lessons.all { DataManager.isLessonCompletedSync(it.id) }
             val quizCompleted = quiz == null || this.quizCompleted || DataManager.isQuizCompleted(id)
             return allLessonsCompleted && quizCompleted
         }

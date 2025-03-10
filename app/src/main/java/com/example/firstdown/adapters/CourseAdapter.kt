@@ -72,7 +72,7 @@ class CourseAdapter(
             DataManager.shouldCourseBeLocked(course.id) { isLocked ->
                 if (isLocked) {
                     tvProgress.text = "Locked"
-                    btnViewCourse.text = "Complete Previous Courses"
+                    btnViewCourse.text = "Locked"
                     // Add lock icon to button
                     btnViewCourse.setCompoundDrawablesWithIntrinsicBounds(R.drawable.ic_lock, 0, 0, 0)
                     btnViewCourse.isEnabled = false

@@ -12,9 +12,14 @@ data class Course(
         get() {
             if (chapters.isEmpty()) return 0
 
-            // Count completed chapters
-            val completedChapters = chapters.count { it.isCompleted }
-            return (completedChapters * 100) / chapters.size
+            val totalLessons = chapters.sumOf { it.lessons.size }
+            if (totalLessons == 0) return 0
+
+            val completedLessons = chapters.sumOf { chapter ->
+                chapter.lessons.count { lesson -> DataManager.isLessonCompletedSync(lesson.id) }
+            }
+
+            return (completedLessons * 100) / totalLessons
         }
 
     // Calculate total lessons in the course
@@ -22,5 +27,5 @@ data class Course(
         get() = chapters.sumOf { it.lessons.size }
 
     val isCompleted: Boolean
-        get() = chapters.all { it.isCompleted }
+        get() = chapters.all { DataManager.isChapterCompleted(it.id) }
 }

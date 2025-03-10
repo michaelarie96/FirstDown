@@ -34,6 +34,11 @@ object DataManager {
     private val completedCourses = mutableSetOf<String>()
     private val startedLessons = mutableSetOf<String>()
     private val startedChapters = mutableSetOf<String>()
+    private val coursesCache = mutableMapOf<String, Course>()
+    private val chaptersCache = mutableMapOf<String, Chapter>()
+    private val lessonsCache = mutableMapOf<String, Lesson>()
+    private val allCoursesCache = mutableListOf<Course>()
+    private var allCoursesCacheTimestamp = 0L
 
     private var hasStartedLearning = false
     private var isProgressLoaded = false
@@ -1657,6 +1662,13 @@ object DataManager {
     }
 
     fun getAllCourses(onComplete: (List<Course>) -> Unit) {
+        // Check if cache is still valid (less than 5 minutes old)
+        val currentTime = System.currentTimeMillis()
+        if (allCoursesCache.isNotEmpty() && currentTime - allCoursesCacheTimestamp < 5 * 60 * 1000) {
+            onComplete(allCoursesCache)
+            return
+        }
+
         val sharedPrefs = SharedPreferencesManager.getInstance()
         val isDatabaseInitialized = sharedPrefs.getBoolean(SPKeys.DATABASE_INITIALIZED, false)
 
@@ -1664,11 +1676,51 @@ object DataManager {
             // Database not yet initialized, use static data
             onComplete(courses)
         } else {
-            FirestoreManager.getAllCourses(onComplete)
+            // Define the correct order of course IDs
+            val courseOrder = listOf(
+                "football-basics",
+                "offensive-playbook",
+                "quarterback-fundamentals",
+                "offensive-strategies",
+                "defensive-strategies"
+            )
+
+            FirestoreManager.getAllCourses { fetchedCourses ->
+                val sortedCourses = fetchedCourses.sortedBy { course ->
+                    courseOrder.indexOf(course.id).let { index ->
+                        if (index == -1) Int.MAX_VALUE else index
+                    }
+                }
+
+                // Update cache
+                allCoursesCache.clear()
+                allCoursesCache.addAll(sortedCourses)
+                allCoursesCacheTimestamp = currentTime
+
+                // Cache individual courses too
+                sortedCourses.forEach { course ->
+                    coursesCache[course.id] = course
+                    course.chapters.forEach { chapter ->
+                        chaptersCache[chapter.id] = chapter
+                        chapter.lessons.forEach { lesson ->
+                            lessonsCache[lesson.id] = lesson
+                        }
+                    }
+                }
+
+                onComplete(sortedCourses)
+            }
         }
     }
 
     fun getCourseById(id: String, onComplete: (Course?) -> Unit) {
+        // Check cache first
+        val cachedCourse = coursesCache[id]
+        if (cachedCourse != null) {
+            onComplete(cachedCourse)
+            return
+        }
+
         val sharedPrefs = SharedPreferencesManager.getInstance()
         val isDatabaseInitialized = sharedPrefs.getBoolean(SPKeys.DATABASE_INITIALIZED, false)
 
@@ -1677,11 +1729,32 @@ object DataManager {
             val course = courses.find { it.id == id }
             onComplete(course)
         } else {
-            FirestoreManager.getCourseById(id, onComplete)
+            FirestoreManager.getCourseById(id) { course ->
+                if (course != null) {
+                    // Cache the course
+                    coursesCache[id] = course
+
+                    // Cache chapters and lessons
+                    course.chapters.forEach { chapter ->
+                        chaptersCache[chapter.id] = chapter
+                        chapter.lessons.forEach { lesson ->
+                            lessonsCache[lesson.id] = lesson
+                        }
+                    }
+                }
+                onComplete(course)
+            }
         }
     }
 
     fun getChapterById(id: String, onComplete: (Chapter?) -> Unit) {
+        // Check cache first
+        val cachedChapter = chaptersCache[id]
+        if (cachedChapter != null) {
+            onComplete(cachedChapter)
+            return
+        }
+
         val sharedPrefs = SharedPreferencesManager.getInstance()
         val isDatabaseInitialized = sharedPrefs.getBoolean(SPKeys.DATABASE_INITIALIZED, false)
 
@@ -1690,11 +1763,29 @@ object DataManager {
             val chapter = chapters.find { it.id == id }
             onComplete(chapter)
         } else {
-            FirestoreManager.getChapterById(id, onComplete)
+            FirestoreManager.getChapterById(id) { chapter ->
+                if (chapter != null) {
+                    // Cache the chapter
+                    chaptersCache[id] = chapter
+
+                    // Cache lessons
+                    chapter.lessons.forEach { lesson ->
+                        lessonsCache[lesson.id] = lesson
+                    }
+                }
+                onComplete(chapter)
+            }
         }
     }
 
     fun getLessonById(id: String, onComplete: (Lesson?) -> Unit) {
+        // Check cache first
+        val cachedLesson = lessonsCache[id]
+        if (cachedLesson != null) {
+            onComplete(cachedLesson)
+            return
+        }
+
         val sharedPrefs = SharedPreferencesManager.getInstance()
         val isDatabaseInitialized = sharedPrefs.getBoolean(SPKeys.DATABASE_INITIALIZED, false)
 
@@ -1703,7 +1794,13 @@ object DataManager {
             val lesson = lessons[id]
             onComplete(lesson)
         } else {
-            FirestoreManager.getLessonById(id, onComplete)
+            FirestoreManager.getLessonById(id) { lesson ->
+                if (lesson != null) {
+                    // Cache the lesson
+                    lessonsCache[id] = lesson
+                }
+                onComplete(lesson)
+            }
         }
     }
 
@@ -1870,18 +1967,31 @@ object DataManager {
 
     fun getCurrentOrNextChapter(onComplete: (Pair<Course, Chapter>?) -> Unit) {
         getAllCourses { courses ->
+            if (courses.isEmpty()) {
+                onComplete(null)
+                return@getAllCourses
+            }
+
+            // First, try to find an unlocked chapter with incomplete lessons
             for (course in courses) {
-                // Try to find an incomplete chapter in this course
-                val currentChapter = course.chapters.find {
+                val unlockedChapter = course.chapters.find {
                     !it.isLocked && it.lessons.any { lesson -> !completedLessons.contains(lesson.id) }
                 }
 
-                if (currentChapter != null) {
-                    onComplete(Pair(course, currentChapter))
+                if (unlockedChapter != null) {
+                    onComplete(Pair(course, unlockedChapter))
                     return@getAllCourses
                 }
             }
-            onComplete(null) // No incomplete chapters found
+
+            // If no unlocked incomplete chapter found, return the first course's first chapter
+            val firstCourse = courses.first()
+            if (firstCourse.chapters.isNotEmpty()) {
+                onComplete(Pair(firstCourse, firstCourse.chapters.first()))
+                return@getAllCourses
+            }
+
+            onComplete(null) // No courses or chapters found
         }
     }
 
@@ -1918,11 +2028,7 @@ object DataManager {
     }
 
     fun isChapterCompleted(chapterId: String): Boolean {
-        if (completedChapters.contains(chapterId)) return true
-
-        // For a more complete check, we'd need to get the chapter and check each lesson
-        // but that would be asynchronous. This is a simplified version.
-        return false
+        return completedChapters.contains(chapterId)
     }
 
     fun shouldCourseBeLocked(courseId: String, onComplete: (Boolean) -> Unit) {

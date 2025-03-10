@@ -167,6 +167,15 @@ class FirestoreManager {
         }
 
         fun getAllCourses(onComplete: (List<Course>) -> Unit) {
+            // Define the correct order of course IDs
+            val courseOrder = listOf(
+                "football-basics",
+                "offensive-playbook",
+                "quarterback-fundamentals",
+                "offensive-strategies",
+                "defensive-strategies"
+            )
+
             db.collection(COURSES_COLLECTION)
                 .get()
                 .addOnSuccessListener { coursesSnapshot ->
@@ -203,7 +212,6 @@ class FirestoreManager {
                                 val chapterId = doc.id
                                 val courseId = doc.getString("courseId") ?: ""
 
-                                // If this chapter belongs to a course
                                 if (coursesMap.containsKey(courseId)) {
                                     // Get the chapters list for this course
                                     val chaptersList = coursesMap[courseId]?.get("chapters") as MutableList<Chapter>
@@ -251,7 +259,13 @@ class FirestoreManager {
                                                     )
                                                 }
 
-                                                onComplete(coursesList.sortedBy { it.id })
+                                                val sortedCourses = coursesList.sortedBy { course ->
+                                                    courseOrder.indexOf(course.id).let { index ->
+                                                        if (index == -1) Int.MAX_VALUE else index // Handle any IDs not in the list
+                                                    }
+                                                }
+
+                                                onComplete(sortedCourses)
                                             }
                                         }
                                     }
@@ -270,7 +284,14 @@ class FirestoreManager {
                                     )
                                 }
 
-                                onComplete(coursesList.sortedBy { it.id })
+                                // Sort courses by the index in the courseOrder list
+                                val sortedCourses = coursesList.sortedBy { course ->
+                                    courseOrder.indexOf(course.id).let { index ->
+                                        if (index == -1) Int.MAX_VALUE else index // Handle any IDs not in the list
+                                    }
+                                }
+
+                                onComplete(sortedCourses)
                             }
                         }
                         .addOnFailureListener { exception ->
