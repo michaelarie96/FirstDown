@@ -1,5 +1,6 @@
 package com.example.firstdown.viewmodel
 
+import android.util.Log
 import androidx.lifecycle.ViewModel
 import com.example.firstdown.model.DataManager
 import com.example.firstdown.model.Chapter
@@ -13,6 +14,7 @@ class QuizViewModel : ViewModel() {
 
     fun getQuizForChapter(chapterId: String, onComplete: (Quiz?) -> Unit) {
         getChapterById(chapterId) { chapter ->
+            Log.d("QuizViewModel", "Got chapter for quiz: ${chapter?.id}, has quiz: ${chapter?.quiz != null}")
             onComplete(chapter?.quiz)
         }
     }

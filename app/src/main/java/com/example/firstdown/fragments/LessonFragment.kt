@@ -1,6 +1,7 @@
 package com.example.firstdown.fragments
 
 import android.os.Bundle
+import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -185,19 +186,27 @@ class LessonFragment : Fragment() {
 
         // Check if this is the last lesson in the chapter
         viewModel.isLastLessonInChapter(lessonId) { isLastLesson ->
+            Log.d("LessonFragment", "isLastLessonInChapter result: $isLastLesson for lesson $lessonId")
+
             if (isLastLesson) {
                 // Get the chapter quiz
                 viewModel.getChapterForLesson(lessonId) { chapter ->
+                    Log.d("LessonFragment", "Chapter for lesson: ${chapter?.id}, has quiz: ${chapter?.quiz != null}")
+
                     if (chapter?.quiz != null) {
                         navigateToQuiz()
                     } else {
                         // If there's no quiz (Shouldn't happen), go back to chapter list
+                        Log.d("LessonFragment", "No quiz found for chapter ${chapter?.id}")
+                        Toast.makeText(context, "No quiz available for this chapter", Toast.LENGTH_SHORT).show()
                         findNavController().navigateUp()
                     }
                 }
             } else {
                 // If not the last lesson, go to the next lesson
                 viewModel.getNextLesson(lessonId) { nextLesson ->
+                    Log.d("LessonFragment", "Next lesson: ${nextLesson?.id}")
+
                     if (nextLesson != null) {
                         // Navigate to next lesson
                         val action = LessonFragmentDirections.actionLessonFragmentSelf(
@@ -206,6 +215,8 @@ class LessonFragment : Fragment() {
                         findNavController().navigate(action)
                     } else {
                         // If no next lesson (Shouldn't happen), go back to chapter list
+                        Log.d("LessonFragment", "No next lesson found")
+                        Toast.makeText(context, "No next lesson found", Toast.LENGTH_SHORT).show()
                         findNavController().navigateUp()
                     }
                 }

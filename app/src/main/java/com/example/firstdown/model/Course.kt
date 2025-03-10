@@ -1,11 +1,11 @@
 package com.example.firstdown.model
 
 data class Course(
-    val id: String,
-    val title: String,
-    val description: String,
-    val imageResId: Int,
-    val chapters: List<Chapter>
+    val id: String = "",
+    val title: String = "",
+    val description: String = "",
+    val imageResId: Int = 0,
+    val chapters: List<Chapter> = emptyList()
 ) {
     // Calculate overall course progress based on completed chapters
     val progress: Int

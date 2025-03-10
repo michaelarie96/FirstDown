@@ -1,6 +1,9 @@
 package com.example.firstdown.fragments
 
 import android.os.Bundle
+import android.os.Handler
+import android.os.Looper
+import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -103,14 +106,6 @@ class HomeFragment : Fragment() {
                         binding.btnStart.text = getString(R.string.start_learning)
                     }
                 }
-
-                // Setup button listener
-                binding.btnStart.setOnClickListener {
-                    val lesson = chapter.lessons.find { !it.isCompleted }
-                    if (lesson != null) {
-                        navigateToLesson(lesson.id, lesson.title)
-                    }
-                }
             } else {
                 // Handle the case where no courses/chapters are available (Shouldn't happen)
                 binding.cardNextLesson.visibility = View.GONE
@@ -153,27 +148,46 @@ class HomeFragment : Fragment() {
 
         // Button listener for continuing/starting learning
         binding.btnStart.setOnClickListener {
+            Log.d("HomeFragment", "Start button clicked")
             viewModel.getCurrentOrNextChapter { courseChapterPair ->
                 if (courseChapterPair != null) {
                     val (_, chapter) = courseChapterPair
+
+                    Log.d("HomeFragment", "Chapter: ${chapter.id}, Lessons count: ${chapter.lessons.size}")
 
                     // Find the first unfinished lesson in this chapter
                     val lesson = chapter.lessons.find { !it.isCompleted }
 
                     if (lesson != null) {
+                        Log.d("HomeFragment", "Found lesson: ${lesson.id}, navigating...")
                         navigateToLesson(lesson.id, lesson.title)
+                    } else {
+                        Log.d("HomeFragment", "No unfinished lesson found!")
+                        // If no unfinished lesson, just navigate to the first lesson
+                        if (chapter.lessons.isNotEmpty()) {
+                            val firstLesson = chapter.lessons.first()
+                            Log.d("HomeFragment", "Using first lesson instead: ${firstLesson.id}")
+                            navigateToLesson(firstLesson.id, firstLesson.title)
+                        }
                     }
+                } else {
+                    Log.d("HomeFragment", "No chapter found!")
                 }
             }
         }
     }
 
     private fun navigateToLesson(lessonId: String, lessonTitle: String) {
-        // Use Navigation Component to navigate to the LessonFragment
-        val action = HomeFragmentDirections.actionNavigationHomeToLessonFragment(
-            lessonId = lessonId
-        )
-        findNavController().navigate(action)
+        try {
+            Log.d("HomeFragment", "Navigating to lesson: $lessonId, title: $lessonTitle")
+            // Use Navigation Component to navigate to the LessonFragment
+            val action = HomeFragmentDirections.actionNavigationHomeToLessonFragment(
+                lessonId = lessonId
+            )
+            findNavController().navigate(action)
+        } catch (e: Exception) {
+            Log.e("HomeFragment", "Navigation error: ${e.message}", e)
+        }
     }
 
     override fun onDestroyView() {

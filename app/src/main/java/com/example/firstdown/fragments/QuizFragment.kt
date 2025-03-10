@@ -1,6 +1,7 @@
 package com.example.firstdown.fragments
 
 import android.os.Bundle
+import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -56,6 +57,8 @@ class QuizFragment : Fragment() {
 
     private fun displayQuiz() {
         viewModel.getQuizForChapter(chapterId) { quiz ->
+            Log.d("QuizFragment", "Quiz loaded for chapter $chapterId: ${quiz != null}")
+
             if (quiz != null) {
                 binding.tvQuestion.text = quiz.question
 
@@ -64,6 +67,7 @@ class QuizFragment : Fragment() {
 
                 setupQuizOptions(quiz)
             } else {
+                Log.e("QuizFragment", "Could not load quiz for chapter $chapterId")
                 Toast.makeText(requireContext(), "Could not load quiz", Toast.LENGTH_SHORT).show()
                 findNavController().navigateUp()
             }

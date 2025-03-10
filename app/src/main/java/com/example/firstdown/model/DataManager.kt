@@ -1908,13 +1908,16 @@ object DataManager {
     fun isLastLessonInChapter(lessonId: String, onComplete: (Boolean) -> Unit) {
         getLessonById(lessonId) { lesson ->
             if (lesson == null) {
+                Log.d("DataManager", "isLastLessonInChapter: lesson is null")
                 onComplete(false)
                 return@getLessonById
             }
 
             getLessonsForChapter(lesson.chapterId) { chapterLessons ->
                 val lastLesson = chapterLessons.maxByOrNull { it.index }
-                onComplete(lastLesson?.id == lessonId)
+                val isLast = lastLesson?.id == lessonId
+                Log.d("DataManager", "isLastLessonInChapter: $isLast, lessonId=$lessonId, lastLesson=${lastLesson?.id}, chapterLessons size=${chapterLessons.size}")
+                onComplete(isLast)
             }
         }
     }

@@ -1,9 +1,11 @@
 package com.example.firstdown.fragments
 
 import android.os.Bundle
+import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.widget.Toast
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.viewModels
 import androidx.navigation.fragment.findNavController
@@ -119,23 +121,43 @@ class ChaptersFragment : Fragment(), ChapterAdapter.ChapterClickListener {
             }
         }
     }
+
     private fun navigateToLesson(lesson: Lesson) {
-        val action = ChaptersFragmentDirections.actionChaptersFragmentToLessonFragment(
-            lessonId = lesson.id
-        )
-        findNavController().navigate(action)
+        try {
+            Log.d("ChaptersFragment", "Navigating to lesson: ${lesson.id}, title: ${lesson.title}")
+            val action = ChaptersFragmentDirections.actionChaptersFragmentToLessonFragment(
+                lessonId = lesson.id
+            )
+            findNavController().navigate(action)
+        } catch (e: Exception) {
+            Log.e("ChaptersFragment", "Navigation error: ${e.message}", e)
+        }
     }
 
     override fun onChapterClicked(chapter: Chapter) {
+        Log.d("ChapterFragment", "Chapter clicked: ${chapter.id}, locked: ${chapter.isLocked}")
+
         if (!chapter.isLocked) {
             if (chapter.progress == 100 && !chapter.quizCompleted) {
                 // Chapter lessons complete but quiz not completed - go to quiz
+                Log.d("ChapterFragment", "Navigating to quiz")
                 navigateToQuiz(chapter)
             } else {
                 // Go to lesson with proper callback
+                Log.d("ChapterFragment", "Getting next lesson for chapter: ${chapter.id}")
+
                 viewModel.getNextLesson(chapter) { lesson ->
                     if (lesson != null) {
+                        Log.d("ChapterFragment", "Found lesson: ${lesson.id}, navigating...")
                         navigateToLesson(lesson)
+                    } else {
+                        Log.d("ChapterFragment", "No lesson found! Trying first lesson...")
+                        // If no next lesson, try the first lesson
+                        if (chapter.lessons.isNotEmpty()) {
+                            navigateToLesson(chapter.lessons.first())
+                        } else {
+                            Log.d("ChapterFragment", "Chapter has no lessons!")
+                        }
                     }
                 }
             }
@@ -149,12 +171,19 @@ class ChaptersFragment : Fragment(), ChapterAdapter.ChapterClickListener {
     }
 
     private fun navigateToQuiz(chapter: Chapter) {
+        Log.d("ChapterFragment", "Navigating to quiz for chapter: ${chapter.id}, quiz: ${chapter.quiz != null}")
+
         if (!chapter.isLocked) {
-            val action = ChaptersFragmentDirections.actionChaptersFragmentToQuizFragment(
-                chapterId = chapter.id,
-                chapterTitle = chapter.title
-            )
-            findNavController().navigate(action)
+            try {
+                val action = ChaptersFragmentDirections.actionChaptersFragmentToQuizFragment(
+                    chapterId = chapter.id,
+                    chapterTitle = chapter.title
+                )
+                findNavController().navigate(action)
+            } catch (e: Exception) {
+                Log.e("ChapterFragment", "Error navigating to quiz: ${e.message}", e)
+                Toast.makeText(requireContext(), "Error navigating to quiz: ${e.message}", Toast.LENGTH_SHORT).show()
+            }
         }
     }
 

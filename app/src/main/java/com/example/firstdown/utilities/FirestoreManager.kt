@@ -436,11 +436,11 @@ class FirestoreManager {
         fun getLessonsForChapter(chapterId: String, onComplete: (List<Lesson>) -> Unit) {
             db.collection(LESSONS_COLLECTION)
                 .whereEqualTo("chapterId", chapterId)
-                .orderBy("index")
                 .get()
                 .addOnSuccessListener { lessonsSnapshot ->
                     val lessons = lessonsSnapshot.toObjects(Lesson::class.java)
-                    onComplete(lessons)
+                    val sortedLessons = lessons.sortedBy { it.index }
+                    onComplete(sortedLessons)
                 }
                 .addOnFailureListener { exception ->
                     Log.e(TAG, "Error getting lessons: $exception")
