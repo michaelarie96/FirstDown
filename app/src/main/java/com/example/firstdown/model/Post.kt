@@ -8,5 +8,6 @@ data class Post(
     val content: String = "",
     val imageUrl: String? = null,
     val likes: Int = 0,
-    val comments: Int = 0
+    val comments: Int = 0,
+    var likedByCurrentUser: Boolean = false
 )
