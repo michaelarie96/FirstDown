@@ -117,7 +117,7 @@
             android:paddingStart="@dimen/margin_medium"
             android:text="Previous Lesson"
             android:textAllCaps="false"
-            android:textColor="@color/text_primary" />
+            android:textColor="@color/white" />
 
         <com.google.android.material.button.MaterialButton
             android:id="@+id/btn_next"
