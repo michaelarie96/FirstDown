@@ -15,6 +15,7 @@ import com.example.firstdown.adapters.ChapterAdapter
 import com.example.firstdown.databinding.FragmentChaptersBinding
 import com.example.firstdown.model.Chapter
 import com.example.firstdown.model.Course
+import com.example.firstdown.model.DataManager
 import com.example.firstdown.model.Lesson
 import com.example.firstdown.viewmodel.ChaptersViewModel
 
@@ -74,7 +75,46 @@ class ChaptersFragment : Fragment(), ChapterAdapter.ChapterClickListener {
         binding.tvProgressPercent.text = "${course.progress}% Complete"
         binding.progressBar.progress = course.progress
 
-        setupRecyclerView()
+        refreshChapterList()
+    }
+
+    private fun refreshChapterList() {
+        // If adapter is already initialized, update it
+        if (::chapterAdapter.isInitialized) {
+            // Check if any chapter lock statuses need updating
+            checkChapterLockStatus(course.chapters) { updatedChapters ->
+                chapterAdapter.updateChapters(updatedChapters)
+            }
+        } else {
+            // First-time setup
+            setupRecyclerView()
+        }
+    }
+
+    private fun checkChapterLockStatus(chapters: List<Chapter>, onComplete: (List<Chapter>) -> Unit) {
+        // Create a mutable copy of the chapters
+        val updatedChapters = chapters.map { it.copy() }.toMutableList()
+        var chaptersProcessed = 0
+
+        // If no chapters, return immediately
+        if (chapters.isEmpty()) {
+            onComplete(updatedChapters)
+            return
+        }
+
+        // Check lock status for each chapter
+        for (i in chapters.indices) {
+            val chapter = chapters[i]
+            DataManager.shouldChapterBeLocked(chapter.id) { shouldBeLocked ->
+                updatedChapters[i] = updatedChapters[i].copy(isLocked = shouldBeLocked)
+
+                // When all chapters are processed, return the updated list
+                chaptersProcessed++
+                if (chaptersProcessed == chapters.size) {
+                    onComplete(updatedChapters)
+                }
+            }
+        }
     }
 
     private fun setupRecyclerView() {
@@ -185,6 +225,11 @@ class ChaptersFragment : Fragment(), ChapterAdapter.ChapterClickListener {
                 Toast.makeText(requireContext(), "Error navigating to quiz: ${e.message}", Toast.LENGTH_SHORT).show()
             }
         }
+    }
+
+    override fun onResume() {
+        super.onResume()
+        setupUI()
     }
 
     override fun onDestroyView() {

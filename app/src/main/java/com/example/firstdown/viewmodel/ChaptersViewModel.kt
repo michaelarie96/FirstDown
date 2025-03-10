@@ -56,4 +56,8 @@ class ChaptersViewModel : ViewModel() {
     fun hasStartedChapter(chapterId: String, onComplete: (Boolean) -> Unit) {
         onComplete(DataManager.hasStartedChapter(chapterId))
     }
+
+    fun shouldChapterBeLocked(chapterId: String, onComplete: (Boolean) -> Unit) {
+        DataManager.shouldChapterBeLocked(chapterId, onComplete)
+    }
 }

@@ -37,6 +37,7 @@ object DataManager {
     private val coursesCache = mutableMapOf<String, Course>()
     private val chaptersCache = mutableMapOf<String, Chapter>()
     private val lessonsCache = mutableMapOf<String, Lesson>()
+    private val quizzesCache = mutableMapOf<String, Quiz>()
     private val allCoursesCache = mutableListOf<Course>()
     private var allCoursesCacheTimestamp = 0L
 
@@ -493,41 +494,48 @@ object DataManager {
         Log.d("DataManager", "Lesson $lessonId marked as completed")
     }
 
-    fun markQuizCompleted(chapterId: String, score: Int) {
+    fun markQuizCompleted(chapterId: String, score: Int, onComplete: () -> Unit = {}) {
+        // Add to completed quizzes
         completedQuizzes.add(chapterId)
 
-        // Check if all lessons in chapter are completed as well and mark chapter as completed
-        getChapterById(chapterId) { chapter ->
-            if (chapter != null && chapter.lessons.all { completedLessons.contains(it.id) }) {
-                markChapterComplete(chapterId)
-            }
-        }
+        // Mark the chapter as completed
+        markChapterComplete(chapterId)
 
+        // Save to shared preferences and Firestore
         saveProgress()
 
-        FirestoreManager.markQuizCompleted(chapterId, score)
+        FirestoreManager.markQuizCompleted(chapterId, score) {
+            // Update the chapter record in Firestore to mark quiz as completed
+            FirestoreManager.updateChapter(chapterId, mapOf("quizCompleted" to true)) {
+                onComplete()
+            }
+        }
     }
 
     fun markChapterComplete(chapterId: String) {
         completedChapters.add(chapterId)
 
-        // Check if this completes a course
+        // Check if all lessons in this chapter are also completed
         getChapterById(chapterId) { chapter ->
             if (chapter != null) {
-                val courseId = chapter.courseId
+                // Get all chapters for this course
+                getCourseById(chapter.courseId) { course ->
+                    if (course != null) {
+                        // Check if all chapters in the course are now completed
+                        val allChaptersCompleted = course.chapters.all {
+                            completedChapters.contains(it.id) || isChapterCompleted(it.id)
+                        }
 
-                getCourseById(courseId) { course ->
-                    if (course != null && course.chapters.all { completedChapters.contains(it.id) }) {
-                        completedCourses.add(courseId)
+                        if (allChaptersCompleted) {
+                            completedCourses.add(course.id)
+                        }
+
                         saveProgress()
                     }
                 }
             }
         }
-
-        saveProgress()
     }
-
     fun isQuizCompleted(chapterId: String): Boolean {
         return completedQuizzes.contains(chapterId)
     }
@@ -563,6 +571,51 @@ object DataManager {
         }
     }
 
+    fun getQuizForChapter(chapterId: String, onComplete: (Quiz?) -> Unit) {
+        // Check cache first
+        val quizId = chapterId + "-quiz"
+        val cachedQuiz = quizzesCache[quizId] ?: quizzesCache[chapterId]
+        if (cachedQuiz != null) {
+            Log.d("DataManager", "Found quiz in cache: ${cachedQuiz.id}")
+            onComplete(cachedQuiz)
+            return
+        }
+
+        val sharedPrefs = SharedPreferencesManager.getInstance()
+        val isDatabaseInitialized = sharedPrefs.getBoolean(SPKeys.DATABASE_INITIALIZED, false)
+
+        if (!isDatabaseInitialized) {
+            // Database not yet initialized, use static data
+            val staticQuiz = quizzes[quizId] ?: quizzes[chapterId]
+            if (staticQuiz != null) {
+                quizzesCache[staticQuiz.id] = staticQuiz
+                onComplete(staticQuiz)
+            } else {
+                onComplete(null)
+            }
+        } else {
+            // Database initialized, fetch from Firestore
+            FirestoreManager.getQuizForChapter(chapterId) { quiz ->
+                if (quiz != null) {
+                    // Cache the quiz
+                    quizzesCache[quiz.id] = quiz
+                    // Also cache by chapter ID for easier lookups
+                    quizzesCache[chapterId] = quiz
+                    onComplete(quiz)
+                } else {
+                    // Check static data as a fallback
+                    val staticQuiz = quizzes[quizId] ?: quizzes[chapterId]
+                    if (staticQuiz != null) {
+                        quizzesCache[staticQuiz.id] = staticQuiz
+                        onComplete(staticQuiz)
+                    } else {
+                        onComplete(null)
+                    }
+                }
+            }
+        }
+    }
+
     fun getNextLessonInChapter(chapterId: String, onComplete: (Lesson?) -> Unit) {
         getLessonsForChapter(chapterId) { chapterLessons ->
             val nextLesson = chapterLessons.firstOrNull { !completedLessons.contains(it.id) }
@@ -583,9 +636,12 @@ object DataManager {
             }
 
             getLessonsForChapter(lesson.chapterId) { chapterLessons ->
-                val lastLesson = chapterLessons.maxByOrNull { it.index }
+                val sortedLessons = chapterLessons.sortedBy { it.index }
+                val lastLesson = sortedLessons.lastOrNull()
                 val isLast = lastLesson?.id == lessonId
-                Log.d("DataManager", "isLastLessonInChapter: $isLast, lessonId=$lessonId, lastLesson=${lastLesson?.id}, chapterLessons size=${chapterLessons.size}")
+
+                Log.d("DataManager", "isLastLessonInChapter: $isLast, lessonId=$lessonId, " +
+                        "lastLesson=${lastLesson?.id}, total lessons=${chapterLessons.size}")
                 onComplete(isLast)
             }
         }
@@ -668,34 +724,41 @@ object DataManager {
     }
 
     fun shouldChapterBeLocked(chapterId: String, onComplete: (Boolean) -> Unit) {
-        getAllCourses { courses ->
-            val allChapters = courses.flatMap { it.chapters }
-            val chapter = allChapters.find { it.id == chapterId } ?: run {
-                onComplete(true)
-                return@getAllCourses
+        // First, get this chapter to find its course and index
+        getChapterById(chapterId) { chapter ->
+            if (chapter == null) {
+                onComplete(true) // If chapter not found, consider it locked
+                return@getChapterById
             }
 
             // Get all chapters for this course
-            val courseChapters = allChapters.filter { it.courseId == chapter.courseId }
-                .sortedBy { it.index }
-
-            // Find the chapter index
-            val chapterIndex = courseChapters.indexOfFirst { it.id == chapterId }
-            if (chapterIndex <= 0) {
-                onComplete(false) // First chapter is never locked
-                return@getAllCourses
-            }
-
-            // Check if all previous chapters are completed
-            for (i in 0 until chapterIndex) {
-                val previousChapter = courseChapters[i]
-                if (!isChapterCompleted(previousChapter.id)) {
-                    onComplete(true) // Lock if any previous chapter isn't completed
-                    return@getAllCourses
+            getCourseById(chapter.courseId) { course ->
+                if (course == null) {
+                    onComplete(true) // If course not found, consider it locked
+                    return@getCourseById
                 }
-            }
 
-            onComplete(false) // All previous chapters completed, so this one is unlocked
+                // Sort chapters by index
+                val sortedChapters = course.chapters.sortedBy { it.index }
+
+                // Find index of this chapter
+                val chapterIndex = sortedChapters.indexOfFirst { it.id == chapterId }
+
+                if (chapterIndex <= 0) {
+                    // First chapter is never locked
+                    onComplete(false)
+                    return@getCourseById
+                }
+
+                // Check if all previous chapters are completed
+                val previousChaptersCompleted = (0 until chapterIndex).all { i ->
+                    val prevChapterId = sortedChapters[i].id
+                    completedChapters.contains(prevChapterId) || isChapterCompleted(prevChapterId)
+                }
+
+                // Chapter should be locked if any previous chapter is not completed
+                onComplete(!previousChaptersCompleted)
+            }
         }
     }
 

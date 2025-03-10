@@ -104,7 +104,10 @@ class FirestoreManager {
 
             // Quizzes
             quizzes.forEach { (quizId, quiz) ->
-                val quizRef = db.collection(QUIZZES_COLLECTION).document(quizId)
+                val documentId = if (quiz.id.isNotEmpty()) quiz.id else quizId
+                val quizRef = db.collection(QUIZZES_COLLECTION).document(documentId)
+
+                Log.d(TAG, "Adding quiz with ID: $documentId")
                 batch.set(quizRef, quiz)
             }
 
@@ -433,6 +436,34 @@ class FirestoreManager {
                 }
         }
 
+        fun updateChapterLockStatus(chapterId: String, isLocked: Boolean, onComplete: () -> Unit = {}) {
+            db.collection(CHAPTERS_COLLECTION)
+                .document(chapterId)
+                .update("isLocked", isLocked)
+                .addOnSuccessListener {
+                    Log.d(TAG, "Successfully updated lock status for chapter $chapterId to $isLocked")
+                    onComplete()
+                }
+                .addOnFailureListener { e ->
+                    Log.e(TAG, "Error updating chapter lock status: $e")
+                    onComplete()
+                }
+        }
+
+        fun updateChapter(chapterId: String, updates: Map<String, Any>, onComplete: () -> Unit = {}) {
+            db.collection(CHAPTERS_COLLECTION)
+                .document(chapterId)
+                .update(updates)
+                .addOnSuccessListener {
+                    Log.d(TAG, "Successfully updated chapter $chapterId with $updates")
+                    onComplete()
+                }
+                .addOnFailureListener { e ->
+                    Log.e(TAG, "Error updating chapter: $e")
+                    onComplete()
+                }
+        }
+
         fun getLessonsForChapter(chapterId: String, onComplete: (List<Lesson>) -> Unit) {
             db.collection(LESSONS_COLLECTION)
                 .whereEqualTo("chapterId", chapterId)
@@ -463,15 +494,42 @@ class FirestoreManager {
         }
 
         fun getQuizForChapter(chapterId: String, onComplete: (Quiz?) -> Unit) {
+            val quizDocId = chapterId + "-quiz"
+
+            Log.d(TAG, "Looking for quiz with document ID: $quizDocId")
+
             db.collection(QUIZZES_COLLECTION)
-                .document(chapterId)
+                .document(quizDocId)
                 .get()
                 .addOnSuccessListener { doc ->
-                    val quiz = doc.toObject(Quiz::class.java)
-                    onComplete(quiz)
+                    if (doc.exists()) {
+                        val quiz = doc.toObject(Quiz::class.java)
+                        Log.d(TAG, "Successfully retrieved quiz for chapter $chapterId with ID $quizDocId")
+                        onComplete(quiz)
+                    } else {
+                        // Try with the original chapter ID as fallback
+                        db.collection(QUIZZES_COLLECTION)
+                            .document(chapterId)
+                            .get()
+                            .addOnSuccessListener { fallbackDoc ->
+                                if (fallbackDoc.exists()) {
+                                    val quiz = fallbackDoc.toObject(Quiz::class.java)
+                                    Log.d(TAG, "Retrieved quiz using fallback ID for chapter $chapterId")
+                                    onComplete(quiz)
+                                } else {
+                                    Log.e(TAG, "No quiz document found for IDs $quizDocId or $chapterId")
+                                    // Instead of returning null, let's check the static data
+                                    onComplete(null)
+                                }
+                            }
+                            .addOnFailureListener { e ->
+                                Log.e(TAG, "Error getting fallback quiz for chapter $chapterId: $e")
+                                onComplete(null)
+                            }
+                    }
                 }
                 .addOnFailureListener { exception ->
-                    Log.e(TAG, "Error getting quiz: $exception")
+                    Log.e(TAG, "Error getting quiz for chapter $chapterId: $exception")
                     onComplete(null)
                 }
         }

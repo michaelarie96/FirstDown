@@ -12,7 +12,7 @@ import com.example.firstdown.model.Chapter
 import com.example.firstdown.model.DataManager
 
 class ChapterAdapter(
-    private val chapters: List<Chapter>,
+    private var chapters: List<Chapter>,
     private val listener: ChapterClickListener
 ) : RecyclerView.Adapter<ChapterAdapter.ChapterViewHolder>() {
 
@@ -33,6 +33,11 @@ class ChapterAdapter(
     }
 
     override fun getItemCount(): Int = chapters.size
+
+    fun updateChapters(newChapters: List<Chapter>) {
+        chapters = newChapters
+        notifyDataSetChanged()
+    }
 
     class ChapterViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
         private val tvChapterTitle: TextView = itemView.findViewById(R.id.tv_chapter_title)
@@ -72,6 +77,7 @@ class ChapterAdapter(
                 }
 
                 btnAction.isEnabled = true
+                btnAction.setCompoundDrawablesWithIntrinsicBounds(0, 0, 0, 0)
             }
 
             // Set click listener

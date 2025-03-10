@@ -8,6 +8,7 @@ import android.view.ViewGroup
 import android.widget.Toast
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.viewModels
+import androidx.navigation.NavOptions
 import androidx.navigation.fragment.findNavController
 import androidx.navigation.fragment.navArgs
 import com.example.firstdown.R
@@ -56,20 +57,33 @@ class QuizFragment : Fragment() {
     }
 
     private fun displayQuiz() {
+        Log.d("QuizFragment", "Attempting to display quiz for chapter: $chapterId")
+
         viewModel.getQuizForChapter(chapterId) { quiz ->
             Log.d("QuizFragment", "Quiz loaded for chapter $chapterId: ${quiz != null}")
 
             if (quiz != null) {
                 binding.tvQuestion.text = quiz.question
-
                 binding.radioGroup.clearCheck()
                 selectedAnswerIndex = -1
-
                 setupQuizOptions(quiz)
             } else {
                 Log.e("QuizFragment", "Could not load quiz for chapter $chapterId")
-                Toast.makeText(requireContext(), "Could not load quiz", Toast.LENGTH_SHORT).show()
-                findNavController().navigateUp()
+
+                // Show a more descriptive error message
+                binding.tvQuestion.text = "Error loading quiz. Please try again later."
+                binding.radioGroup.visibility = View.GONE
+                binding.btnSubmitAnswer.isEnabled = false
+
+                Toast.makeText(requireContext(),
+                    "Could not load quiz. Please try again later.",
+                    Toast.LENGTH_LONG).show()
+
+                // Log additional diagnostic info
+                viewModel.getChapterById(chapterId) { chapter ->
+                    Log.d("QuizFragment", "Chapter details - ID: ${chapter?.id}, " +
+                            "Title: ${chapter?.title}, Has quiz: ${chapter?.quiz != null}")
+                }
             }
         }
     }
@@ -137,13 +151,28 @@ class QuizFragment : Fragment() {
             Toast.makeText(requireContext(), feedbackMessage, Toast.LENGTH_SHORT).show()
 
             // Mark quiz as completed
-            viewModel.markQuizCompleted(chapterId, score)
-            Toast.makeText(requireContext(), "Quiz completed! Your score: $score%", Toast.LENGTH_LONG).show()
+            viewModel.markQuizCompleted(chapterId, score) {
+                Toast.makeText(requireContext(), "Quiz completed! Your score: $score%", Toast.LENGTH_LONG).show()
 
-            // Return to chapters screen
-            findNavController().popBackStack(R.id.ChaptersFragment, false)
+                // Return to chapters screen
+                findNavController().popBackStack(R.id.ChaptersFragment, false)
+
+                // Force refresh of the chapters fragment
+                findNavController().currentDestination?.let { destination ->
+                    if (destination.id == R.id.ChaptersFragment) {
+                        findNavController().navigate(
+                            R.id.ChaptersFragment,
+                            null,
+                            NavOptions.Builder()
+                                .setPopUpTo(R.id.ChaptersFragment, true)
+                                .build()
+                        )
+                    }
+                }
+            }
         }
     }
+
     override fun onDestroyView() {
         super.onDestroyView()
         _binding = null
