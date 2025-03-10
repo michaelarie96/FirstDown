@@ -92,7 +92,8 @@ object DataManager {
             content = "What's the best way to improve ball control during high-pressure situations? Any drills recommendations?",
             imageUrl = null,
             likes = 24,
-            comments = 8
+            comments = 8,
+            likedByCurrentUser = false
         ),
         Post(
             id = "post2",
@@ -102,7 +103,8 @@ object DataManager {
             content = "Pro tip: Here's a quick drill for improving your first touch. Practice this for 15 minutes daily and you'll see improvement within a week.",
             imageUrl = "https://images.unsplash.com/photo-1566577739112-5180d4bf9390?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxzZWFyY2h8Mnx8Zm9vdGJhbGwlMjB0cmFpbmluZ3xlbnwwfHwwfHx8MA%3D%3D&w=1000&q=80",
             likes = 56,
-            comments = 12
+            comments = 12,
+            likedByCurrentUser = false
         ),
         Post(
             id = "post3",
@@ -112,7 +114,8 @@ object DataManager {
             content = "Can someone explain the difference between Cover 2 and Cover 3? I'm trying to understand defensive schemes better.",
             imageUrl = null,
             likes = 18,
-            comments = 7
+            comments = 7,
+            likedByCurrentUser = false
         ),
         Post(
             id = "post4",
@@ -122,7 +125,8 @@ object DataManager {
             content = "Just completed the Quarterback Fundamentals course. The mechanics section really helped me improve my throwing accuracy!",
             imageUrl = "https://images.unsplash.com/photo-1566577739112-5180d4bf9390?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxzZWFyY2h8Mnx8Zm9vdGJhbGwlMjB0cmFpbmluZ3xlbnwwfHwwfHx8MA%3D%3D&w=1000&q=80",
             likes = 42,
-            comments = 5
+            comments = 5,
+            likedByCurrentUser = false
         )
     )
 
@@ -827,14 +831,25 @@ object DataManager {
 
     fun getAllPosts(onComplete: (List<Post>) -> Unit) {
         val sharedPrefs = SharedPreferencesManager.getInstance()
-        val isDatabaseInitialized = sharedPrefs.getBoolean(SPKeys.DATABASE_INITIALIZED, false)
+        val likedPostsKey = "liked_posts_${FirebaseAuth.getInstance().currentUser?.uid ?: "anonymous"}"
+        val likedPosts = sharedPrefs.getStringSet(likedPostsKey, mutableSetOf())
 
-        if (!isDatabaseInitialized) {
+        val sharedPrefsInitialized = sharedPrefs.getBoolean(SPKeys.DATABASE_INITIALIZED, false)
+
+        if (!sharedPrefsInitialized) {
             // Database not yet initialized, use static data
-            onComplete(posts)
+            val postsWithLikedStatus = posts.map { post ->
+                post.copy(likedByCurrentUser = likedPosts.contains(post.id))
+            }
+            onComplete(postsWithLikedStatus)
         } else {
             // Database initialized, fetch from Firestore
-            FirestoreManager.getAllPosts(onComplete)
+            FirestoreManager.getAllPosts { fetchedPosts ->
+                val postsWithLikedStatus = fetchedPosts.map { post ->
+                    post.copy(likedByCurrentUser = likedPosts.contains(post.id))
+                }
+                onComplete(postsWithLikedStatus)
+            }
         }
     }
 
@@ -852,11 +867,45 @@ object DataManager {
         }
     }
 
-    fun togglePostFavorite(postId: String, isFavorite: Boolean, onComplete: () -> Unit = {}) {
-        FirestoreManager.updatePost(postId, isFavorite, onComplete)
-    }
-
     fun addNewPost(post: Post, onComplete: (Boolean) -> Unit = {}) {
         FirestoreManager.addNewPost(post, onComplete)
     }
-}
+
+    fun toggleLike(postId: String, onComplete: (updatedLikes: Int, isLiked: Boolean) -> Unit) {
+        val currentUserId = FirebaseAuth.getInstance().currentUser?.uid ?: "anonymous"
+        val sharedPrefs = SharedPreferencesManager.getInstance()
+        val likedPostsKey = "liked_posts_$currentUserId"
+        val likedPosts = sharedPrefs.getStringSet(likedPostsKey, mutableSetOf())
+
+        // Check if the post is already liked
+        val isCurrentlyLiked = likedPosts.contains(postId)
+        val updatedLikedPosts = likedPosts.toMutableSet()
+
+        getPostById(postId) { post ->
+            if (post != null) {
+                val updatedLikes = if (isCurrentlyLiked) {
+                    // Unlike the post
+                    updatedLikedPosts.remove(postId)
+                    Math.max(0, post.likes - 1) // Ensure likes don't go below 0
+                } else {
+                    // Like the post
+                    updatedLikedPosts.add(postId)
+                    post.likes + 1
+                }
+
+                // Save the updated liked posts to SharedPreferences
+                sharedPrefs.putStringSet(likedPostsKey, updatedLikedPosts)
+
+                // Update the post in Firestore
+                val updates = mapOf("likes" to updatedLikes)
+
+                FirestoreManager.updatePost(postId, updates) {
+                    Log.d("DataManager", "Post $postId likes updated to $updatedLikes")
+                    onComplete(updatedLikes, !isCurrentlyLiked)
+                }
+            } else {
+                Log.e("DataManager", "Post $postId not found for like update")
+                onComplete(0, false)
+            }
+        }
+    }}

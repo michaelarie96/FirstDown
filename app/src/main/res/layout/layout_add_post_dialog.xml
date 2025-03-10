@@ -1,0 +1,59 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:orientation="vertical"
+    android:padding="@dimen/margin_large">
+
+    <com.google.android.material.textview.MaterialTextView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="Create New Post"
+        android:textColor="@color/text_primary"
+        android:textSize="@dimen/text_heading_small"
+        android:textStyle="bold"
+        android:layout_marginBottom="@dimen/margin_medium" />
+
+    <com.google.android.material.textfield.TextInputLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="@dimen/margin_medium">
+
+        <com.google.android.material.textfield.TextInputEditText
+            android:id="@+id/et_post_content"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:hint="What's on your mind?"
+            android:inputType="textMultiLine"
+            android:minLines="4"
+            android:maxLines="8" />
+    </com.google.android.material.textfield.TextInputLayout>
+
+    <RadioGroup
+        android:id="@+id/rg_post_type"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:layout_marginTop="@dimen/margin_medium">
+
+        <RadioButton
+            android:id="@+id/rb_general_post"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="General Post"
+            android:checked="true" />
+
+        <RadioButton
+            android:id="@+id/rb_question"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Question" />
+
+        <RadioButton
+            android:id="@+id/rb_tip"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Pro Tip" />
+    </RadioGroup>
+
+</LinearLayout>

@@ -637,10 +637,10 @@ class FirestoreManager {
                 }
         }
 
-        fun updatePost(postId: String, isFavorite: Boolean, onComplete: () -> Unit = {}) {
+        fun updatePost(postId: String, updates: Map<String, Any>, onComplete: () -> Unit = {}) {
             db.collection(POSTS_COLLECTION)
                 .document(postId)
-                .update("isFavorite", isFavorite)
+                .update(updates)
                 .addOnSuccessListener {
                     Log.d(TAG, "Post $postId updated successfully")
                     onComplete()

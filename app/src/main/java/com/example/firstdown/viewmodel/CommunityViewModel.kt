@@ -41,13 +41,12 @@ class CommunityViewModel : ViewModel() {
 
 
     fun toggleLike(postId: String, onComplete: (Int) -> Unit) {
-        // In future, this would update a database
-        DataManager.getPostById(postId) { post ->
-            // For now, we'll just toggle the like locally
-            post?.let {
-                // Toggle like by adding 1 (simulating the current user liking the post)
-                onComplete(it.likes + 1)
-            } ?: onComplete(0)
+        DataManager.toggleLike(postId) { updatedLikes, isLiked ->
+            onComplete(updatedLikes)
         }
+    }
+
+    fun addNewPost(post: Post, onComplete: (Boolean) -> Unit) {
+        DataManager.addNewPost(post, onComplete)
     }
 }

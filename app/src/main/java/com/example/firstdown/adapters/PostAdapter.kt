@@ -4,6 +4,7 @@ import android.view.LayoutInflater
 import android.view.ViewGroup
 import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.RecyclerView
+import com.example.firstdown.R
 import com.example.firstdown.databinding.ItemPostBinding
 import com.example.firstdown.model.Post
 import com.example.firstdown.utilities.ImageLoader
@@ -15,7 +16,6 @@ class PostAdapter(private var posts: List<Post> = emptyList()) :
     interface PostInteractionListener {
         fun onLikeClicked(post: Post, position: Int)
         fun onCommentClicked(post: Post, position: Int)
-        fun onBookmarkClicked(post: Post, position: Int)
     }
 
     var listener: PostInteractionListener? = null
@@ -72,6 +72,10 @@ class PostAdapter(private var posts: List<Post> = emptyList()) :
                     imgPostContent.visibility = android.view.View.GONE
                 }
 
+                btnLike.setImageResource(
+                    if (post.likedByCurrentUser) R.drawable.ic_like_filled else R.drawable.ic_like
+                )
+
                 // Set up click listeners
                 btnLike.setOnClickListener {
                     listener?.onLikeClicked(post, adapterPosition)
@@ -79,10 +83,6 @@ class PostAdapter(private var posts: List<Post> = emptyList()) :
 
                 btnComment.setOnClickListener {
                     listener?.onCommentClicked(post, adapterPosition)
-                }
-
-                btnBookmark.setOnClickListener {
-                    listener?.onBookmarkClicked(post, adapterPosition)
                 }
             }
         }

@@ -1,20 +1,26 @@
 package com.example.firstdown.fragments
 
+import android.app.AlertDialog
 import android.os.Bundle
 import android.text.Editable
 import android.text.TextWatcher
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.widget.RadioGroup
 import android.widget.Toast
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.viewModels
 import androidx.recyclerview.widget.LinearLayoutManager
+import com.example.firstdown.R
 import com.example.firstdown.adapters.PostAdapter
 import com.example.firstdown.databinding.FragmentCommunityBinding
 import com.example.firstdown.model.Post
 import com.example.firstdown.viewmodel.CommunityViewModel
 import com.google.android.material.tabs.TabLayout
+import com.google.android.material.textfield.TextInputEditText
+import com.google.firebase.auth.FirebaseAuth
+import java.util.UUID
 
 class CommunityFragment : Fragment(), PostAdapter.PostInteractionListener {
 
@@ -44,13 +50,6 @@ class CommunityFragment : Fragment(), PostAdapter.PostInteractionListener {
     }
 
     private fun setupUI() {
-        // Set up tab layout
-        binding.tabLayout.apply {
-            addTab(newTab().setText("All Posts"))
-            addTab(newTab().setText("Questions"))
-            addTab(newTab().setText("Tips"))
-        }
-
         // Initialize adapter
         postAdapter = PostAdapter()
         postAdapter.listener = this
@@ -59,7 +58,7 @@ class CommunityFragment : Fragment(), PostAdapter.PostInteractionListener {
         binding.rvPosts.apply {
             layoutManager = LinearLayoutManager(requireContext())
             adapter = postAdapter
-            setHasFixedSize(true) // Optimization if items have fixed size
+            setHasFixedSize(true)
         }
     }
 
@@ -76,35 +75,87 @@ class CommunityFragment : Fragment(), PostAdapter.PostInteractionListener {
             override fun onTabReselected(tab: TabLayout.Tab) {}
         })
 
-        // Search input listener
-        binding.etSearch.addTextChangedListener(object : TextWatcher {
-            override fun beforeTextChanged(s: CharSequence?, start: Int, count: Int, after: Int) {}
-
-            override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) {
-                currentSearchQuery = s.toString()
-                applyFiltersAndDisplayPosts()
-            }
-
-            override fun afterTextChanged(s: Editable?) {}
-        })
-
         // New post button
         binding.fabNewPost.setOnClickListener {
-            // This would navigate to a new post creation screen in the future
-            Toast.makeText(requireContext(), "New post feature coming soon!", Toast.LENGTH_SHORT).show()
+            showAddPostDialog()
+        }
+    }
+
+    private fun showAddPostDialog() {
+        val dialogView = LayoutInflater.from(requireContext())
+            .inflate(R.layout.layout_add_post_dialog, null)
+
+        val etPostContent = dialogView.findViewById<TextInputEditText>(R.id.et_post_content)
+        val rgPostType = dialogView.findViewById<RadioGroup>(R.id.rg_post_type)
+
+        val dialog = AlertDialog.Builder(requireContext())
+            .setView(dialogView)
+            .setPositiveButton("Post") { _, _ ->
+                val content = etPostContent.text.toString().trim()
+                if (content.isNotEmpty()) {
+                    // Get the selected post type
+                    val selectedType = when (rgPostType.checkedRadioButtonId) {
+                        R.id.rb_question -> "question"
+                        R.id.rb_tip -> "tip"
+                        else -> "general"
+                    }
+
+                    // Format content based on type
+                    val formattedContent = when (selectedType) {
+                        "question" -> if (!content.endsWith("?")) "$content?" else content
+                        "tip" -> if (!content.startsWith("Pro tip:", ignoreCase = true)) "Pro tip: $content" else content
+                        else -> content
+                    }
+
+                    createNewPost(formattedContent)
+                } else {
+                    Toast.makeText(requireContext(), "Post content cannot be empty", Toast.LENGTH_SHORT).show()
+                }
+            }
+            .setNegativeButton("Cancel", null)
+            .create()
+
+        dialog.show()
+    }
+
+    private fun createNewPost(content: String) {
+        // Get current user
+        val currentUser = FirebaseAuth.getInstance().currentUser
+        val userName = currentUser?.displayName ?: "Anonymous"
+        val userProfileImage = currentUser?.photoUrl?.toString() ?: ""
+
+        // Create a new post with unique ID
+        val postId = UUID.randomUUID().toString()
+
+        val newPost = Post(
+            id = postId,
+            userProfileImage = userProfileImage,
+            userName = userName,
+            timeAgo = "Just now",
+            content = content,
+            imageUrl = null,
+            likes = 0,
+            comments = 0,
+            likedByCurrentUser = false // Explicitly set to false for new posts
+        )
+
+        // Add the post through ViewModel
+        viewModel.addNewPost(newPost) { success ->
+            if (success) {
+                Toast.makeText(requireContext(), "Post created successfully!", Toast.LENGTH_SHORT).show()
+                // Refresh the posts list
+                viewModel.getAllPosts { allPosts ->
+                    displayFilteredPosts(allPosts)
+                }
+            } else {
+                Toast.makeText(requireContext(), "Failed to create post", Toast.LENGTH_SHORT).show()
+            }
         }
     }
 
     private fun applyFiltersAndDisplayPosts() {
-        // Apply both tab filter and search query
-        if (currentSearchQuery.isNotEmpty()) {
-            viewModel.searchPosts(currentSearchQuery) { filteredPosts ->
-                displayFilteredPosts(filteredPosts)
-            }
-        } else {
-            viewModel.filterPostsByType(currentTabPosition) { filteredPosts ->
-                displayFilteredPosts(filteredPosts)
-            }
+        viewModel.filterPostsByType(currentTabPosition) { filteredPosts ->
+            displayFilteredPosts(filteredPosts)
         }
     }
 
@@ -132,21 +183,16 @@ class CommunityFragment : Fragment(), PostAdapter.PostInteractionListener {
     override fun onLikeClicked(post: Post, position: Int) {
         // Update like count through ViewModel
         viewModel.toggleLike(post.id) { updatedLikes ->
-            Toast.makeText(requireContext(), "Liked! Total likes: $updatedLikes", Toast.LENGTH_SHORT).show()
-
-            // Refresh the post list
-            displayPosts()
+            // After toggling like, refresh the posts to update UI
+            viewModel.getAllPosts { refreshedPosts ->
+                displayFilteredPosts(refreshedPosts)
+            }
         }
     }
 
     override fun onCommentClicked(post: Post, position: Int) {
         // In the future, this would navigate to a comment screen or show a comment dialog
         Toast.makeText(requireContext(), "Comments feature coming soon!", Toast.LENGTH_SHORT).show()
-    }
-
-    override fun onBookmarkClicked(post: Post, position: Int) {
-        // Handle bookmark/save functionality
-        Toast.makeText(requireContext(), "Post saved!", Toast.LENGTH_SHORT).show()
     }
 
     override fun onDestroyView() {
