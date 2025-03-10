@@ -126,7 +126,6 @@ object DataManager {
         )
     )
 
-    // Initialize the DataManager
     fun initialize(onComplete: () -> Unit = {}) {
         val sharedPrefs = SharedPreferencesManager.getInstance()
 
@@ -144,16 +143,43 @@ object DataManager {
                 }
             }
         } else {
-            Log.d("DataManager", "Database already initialized, loading user progress")
+            Log.d("DataManager", "Database flag says initialized, verifying data exists")
 
-            if (!isProgressLoaded) {
-                loadProgressFromSharedPreferences()
+            // Verify data actually exists in Firestore
+            verifyDatabaseInitialized { dataExists ->
+                if (!dataExists) {
+                    Log.d("DataManager", "Database flag was true but no data found, reinitializing")
+                    // Database flag is true but no data exists, reinitialize
+                    initializeFirestoreDatabase {
+                        loadUserProgress {
+                            onComplete()
+                        }
+                    }
+                } else {
+                    Log.d("DataManager", "Database verified as initialized, loading user progress")
+                    if (!isProgressLoaded) {
+                        loadProgressFromSharedPreferences()
 
-                loadUserProgress {
-                    onComplete()
+                        loadUserProgress {
+                            onComplete()
+                        }
+                    } else {
+                        onComplete()
+                    }
                 }
+            }
+        }
+    }
+
+    private fun verifyDatabaseInitialized(callback: (Boolean) -> Unit) {
+        // Check for at least one course in the database
+        FirestoreManager.getAllCourses { courses ->
+            if (courses.isEmpty()) {
+                // No courses found, database not initialized properly
+                callback(false)
             } else {
-                onComplete()
+                // Courses found, database is properly initialized
+                callback(true)
             }
         }
     }
@@ -536,6 +562,7 @@ object DataManager {
             }
         }
     }
+
     fun isQuizCompleted(chapterId: String): Boolean {
         return completedQuizzes.contains(chapterId)
     }

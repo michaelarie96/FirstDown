@@ -182,6 +182,12 @@ class FirestoreManager {
             db.collection(COURSES_COLLECTION)
                 .get()
                 .addOnSuccessListener { coursesSnapshot ->
+                    if (coursesSnapshot.isEmpty) {
+                        Log.d(TAG, "No courses found in Firestore database")
+                        onComplete(emptyList())
+                        return@addOnSuccessListener
+                    }
+
                     val coursesMap = mutableMapOf<String, MutableMap<String, Any>>()
 
                     // Create basic course objects

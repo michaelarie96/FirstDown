@@ -897,8 +897,8 @@ class StaticDataBackup {
             correctOptionIndex = 1,
             explanation = "A team has 4 downs (attempts) to advance the ball 10 yards. If successful, they receive a new set of downs."
         ),
-        "positions-quiz" to Quiz(
-            id = "positions-quiz",
+        "player-positions-quiz" to Quiz(
+            id = "player-positions-quiz",
             question = "Which position is responsible for calling offensive plays and throwing passes?",
             options = listOf("Running Back", "Wide Receiver", "Quarterback", "Center"),
             correctOptionIndex = 2,
