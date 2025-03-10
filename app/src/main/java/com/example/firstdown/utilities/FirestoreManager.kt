@@ -19,6 +19,7 @@ class FirestoreManager {
         private const val LESSONS_COLLECTION = "lessons"
         private const val QUIZZES_COLLECTION = "quizzes"
         private const val POSTS_COLLECTION = "posts"
+        private const val NOTIFICATIONS_COLLECTION = "notifications"
 
         private val db = FirebaseFirestore.getInstance()
         private val auth = FirebaseAuth.getInstance()
@@ -660,6 +661,49 @@ class FirestoreManager {
                 }
                 .addOnFailureListener { e ->
                     Log.e(TAG, "Error adding post: $e")
+                    onComplete(false)
+                }
+        }
+
+        fun addNotification(notification: Notification, onComplete: (Boolean) -> Unit) {
+            db.collection(NOTIFICATIONS_COLLECTION)
+                .document(notification.id)
+                .set(notification)
+                .addOnSuccessListener {
+                    Log.d(TAG, "Notification added successfully with ID: ${notification.id}")
+                    onComplete(true)
+                }
+                .addOnFailureListener { e ->
+                    Log.e(TAG, "Error adding notification: $e")
+                    onComplete(false)
+                }
+        }
+
+        fun getNotificationsForUser(userName: String, onComplete: (List<Notification>) -> Unit) {
+            db.collection(NOTIFICATIONS_COLLECTION)
+                .whereEqualTo("recipientUserName", userName)
+                .orderBy("timestamp", Query.Direction.DESCENDING)
+                .get()
+                .addOnSuccessListener { result ->
+                    val notifications = result.toObjects(Notification::class.java)
+                    onComplete(notifications)
+                }
+                .addOnFailureListener { exception ->
+                    Log.e(TAG, "Error getting notifications: $exception")
+                    onComplete(emptyList())
+                }
+        }
+
+        fun updateNotification(notificationId: String, updates: Map<String, Any>, onComplete: (Boolean) -> Unit) {
+            db.collection(NOTIFICATIONS_COLLECTION)
+                .document(notificationId)
+                .update(updates)
+                .addOnSuccessListener {
+                    Log.d(TAG, "Notification $notificationId updated successfully")
+                    onComplete(true)
+                }
+                .addOnFailureListener { e ->
+                    Log.e(TAG, "Error updating notification: $e")
                     onComplete(false)
                 }
         }

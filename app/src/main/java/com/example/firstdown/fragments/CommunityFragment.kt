@@ -1,20 +1,28 @@
 package com.example.firstdown.fragments
 
 import android.app.AlertDialog
+import android.graphics.Color
+import android.graphics.drawable.ColorDrawable
 import android.os.Bundle
 import android.text.Editable
 import android.text.TextWatcher
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.widget.PopupWindow
 import android.widget.RadioGroup
+import android.widget.TextView
 import android.widget.Toast
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.viewModels
 import androidx.recyclerview.widget.LinearLayoutManager
+import androidx.recyclerview.widget.RecyclerView
 import com.example.firstdown.R
+import com.example.firstdown.adapters.NotificationDropdownAdapter
 import com.example.firstdown.adapters.PostAdapter
 import com.example.firstdown.databinding.FragmentCommunityBinding
+import com.example.firstdown.model.DataManager
+import com.example.firstdown.model.Notification
 import com.example.firstdown.model.Post
 import com.example.firstdown.viewmodel.CommunityViewModel
 import com.google.android.material.tabs.TabLayout
@@ -31,6 +39,10 @@ class CommunityFragment : Fragment(), PostAdapter.PostInteractionListener {
 
     private var currentTabPosition = 0
 
+    private var popupWindow: PopupWindow? = null
+    private lateinit var notificationAdapter: NotificationDropdownAdapter
+    private var currentUserName: String = ""
+
     override fun onCreateView(
         inflater: LayoutInflater,
         container: ViewGroup?,
@@ -42,9 +54,13 @@ class CommunityFragment : Fragment(), PostAdapter.PostInteractionListener {
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
+
+        currentUserName = FirebaseAuth.getInstance().currentUser?.displayName ?: "Anonymous"
+
         setupUI()
         setupListeners()
         displayPosts()
+        checkNotifications()
     }
 
     private fun setupUI() {
@@ -76,6 +92,125 @@ class CommunityFragment : Fragment(), PostAdapter.PostInteractionListener {
         // New post button
         binding.fabNewPost.setOnClickListener {
             showAddPostDialog()
+        }
+
+        // Notifications button
+        binding.btnNotifications.setOnClickListener {
+            if (popupWindow?.isShowing == true) {
+                popupWindow?.dismiss()
+            } else {
+                showNotificationsPopup()
+            }
+        }
+    }
+
+    private fun checkNotifications() {
+        if (currentUserName.isNotEmpty() && currentUserName != "Anonymous") {
+            DataManager.getUserNotifications(currentUserName) { notifications ->
+                val unreadCount = notifications.count { !it.isRead }
+                binding.notificationIndicator.visibility = if (unreadCount > 0) View.VISIBLE else View.GONE
+            }
+        }
+    }
+
+    private fun showNotificationsPopup() {
+        // Create popup window
+        val inflater = LayoutInflater.from(requireContext())
+        val popupView = inflater.inflate(R.layout.dropdown_notification, null)
+
+        popupWindow = PopupWindow(
+            popupView,
+            ViewGroup.LayoutParams.WRAP_CONTENT,
+            ViewGroup.LayoutParams.WRAP_CONTENT,
+            true
+        ).apply {
+            elevation = 10f
+            isOutsideTouchable = true
+            setBackgroundDrawable(ColorDrawable(Color.TRANSPARENT))
+        }
+
+        // Setup adapter and recycler view
+        val recyclerView = popupView.findViewById<RecyclerView>(R.id.rv_notifications)
+        val emptyView = popupView.findViewById<TextView>(R.id.tv_empty_state)
+        val markAllReadBtn = popupView.findViewById<TextView>(R.id.tv_mark_all_read)
+
+        notificationAdapter = NotificationDropdownAdapter(emptyList(), object : NotificationDropdownAdapter.NotificationClickListener {
+            override fun onNotificationClicked(notification: Notification, position: Int) {
+                handleNotificationClick(notification)
+            }
+        })
+
+        recyclerView.apply {
+            layoutManager = LinearLayoutManager(requireContext())
+            adapter = notificationAdapter
+        }
+
+        // Mark all read button
+        markAllReadBtn.setOnClickListener {
+            markAllNotificationsAsRead()
+        }
+
+        // Load notifications
+        DataManager.getUserNotifications(currentUserName) { notifications ->
+            if (notifications.isEmpty()) {
+                recyclerView.visibility = View.GONE
+                emptyView.visibility = View.VISIBLE
+            } else {
+                recyclerView.visibility = View.VISIBLE
+                emptyView.visibility = View.GONE
+                notificationAdapter.updateNotifications(notifications)
+            }
+
+            // Update notification indicator
+            val unreadCount = notifications.count { !it.isRead }
+            binding.notificationIndicator.visibility = if (unreadCount > 0) View.VISIBLE else View.GONE
+        }
+
+        // Show popup below the notifications button
+        popupWindow?.showAsDropDown(binding.btnNotifications, -250, 0)
+    }
+
+    private fun handleNotificationClick(notification: Notification) {
+        // Mark notification as read
+        DataManager.markNotificationAsRead(notification.id) { success ->
+            if (success) {
+                // Update notification list
+                DataManager.getUserNotifications(currentUserName) { notifications ->
+                    notificationAdapter.updateNotifications(notifications)
+
+                    // Update notification indicator
+                    val unreadCount = notifications.count { !it.isRead }
+                    binding.notificationIndicator.visibility = if (unreadCount > 0) View.VISIBLE else View.GONE
+                }
+
+                // Handle navigation to the post
+                // This would be a future enhancement
+                Toast.makeText(requireContext(), "Notification clicked: ${notification.message}", Toast.LENGTH_SHORT).show()
+            }
+        }
+    }
+
+    private fun markAllNotificationsAsRead() {
+        DataManager.getUserNotifications(currentUserName) { notifications ->
+            val unreadNotifications = notifications.filter { !it.isRead }
+
+            if (unreadNotifications.isNotEmpty()) {
+                var processedCount = 0
+
+                for (notification in unreadNotifications) {
+                    DataManager.markNotificationAsRead(notification.id) { success ->
+                        processedCount++
+
+                        if (processedCount == unreadNotifications.size) {
+                            // All processed, refresh notifications
+                            DataManager.getUserNotifications(currentUserName) { updatedNotifications ->
+                                notificationAdapter.updateNotifications(updatedNotifications)
+                                binding.notificationIndicator.visibility = View.GONE
+                            }
+                        }
+                    }
+                }
+            }
         }
     }
 
@@ -186,6 +321,11 @@ class CommunityFragment : Fragment(), PostAdapter.PostInteractionListener {
                 displayFilteredPosts(refreshedPosts)
             }
         }
+    }
+
+    override fun onPause() {
+        super.onPause()
+        popupWindow?.dismiss()
     }
 
     override fun onDestroyView() {

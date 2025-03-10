@@ -12,6 +12,7 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import java.time.LocalDate
 import java.time.format.DateTimeFormatter
+import java.util.UUID
 
 object DataManager {
     // SharedPreferences Keys
@@ -40,6 +41,9 @@ object DataManager {
     private val quizzesCache = mutableMapOf<String, Quiz>()
     private val allCoursesCache = mutableListOf<Course>()
     private var allCoursesCacheTimestamp = 0L
+
+    private val userNotifications = mutableListOf<Notification>()
+    private var unreadNotificationCount = 0
 
     private var hasStartedLearning = false
     private var isProgressLoaded = false
@@ -873,6 +877,7 @@ object DataManager {
 
     fun toggleLike(postId: String, onComplete: (updatedLikes: Int, isLiked: Boolean) -> Unit) {
         val currentUserId = FirebaseAuth.getInstance().currentUser?.uid ?: "anonymous"
+        val currentUserName = FirebaseAuth.getInstance().currentUser?.displayName ?: "Anonymous"
         val sharedPrefs = SharedPreferencesManager.getInstance()
         val likedPostsKey = "liked_posts_$currentUserId"
         val likedPosts = sharedPrefs.getStringSet(likedPostsKey, mutableSetOf())
@@ -890,6 +895,24 @@ object DataManager {
                 } else {
                     // Like the post
                     updatedLikedPosts.add(postId)
+
+                    // Only create notification when liking (not unliking)
+                    // Don't notify if user is liking their own post
+                    if (post.userName != "Anonymous" && post.userName.isNotEmpty() && post.userName != currentUserName) {
+                        // Create a notification
+                        val notificationId = UUID.randomUUID().toString()
+                        val notification = Notification(
+                            id = notificationId,
+                            recipientUserName = post.userName,
+                            message = "$currentUserName liked your post",
+                            postId = postId,
+                            likerName = currentUserName,
+                            timestamp = System.currentTimeMillis()
+                        )
+
+                        createNotification(notification)
+                    }
+
                     post.likes + 1
                 }
 
@@ -908,4 +931,36 @@ object DataManager {
                 onComplete(0, false)
             }
         }
-    }}
+    }
+
+    fun createNotification(notification: Notification, onComplete: (Boolean) -> Unit = {}) {
+        FirestoreManager.addNotification(notification, onComplete)
+    }
+
+    fun getUserNotifications(userName: String, onComplete: (List<Notification>) -> Unit) {
+        FirestoreManager.getNotificationsForUser(userName) { notifications ->
+            userNotifications.clear()
+            userNotifications.addAll(notifications)
+            unreadNotificationCount = notifications.count { !it.isRead }
+            onComplete(notifications)
+        }
+    }
+
+    fun markNotificationAsRead(notificationId: String, onComplete: (Boolean) -> Unit = {}) {
+        FirestoreManager.updateNotification(notificationId, mapOf("isRead" to true)) { success ->
+            if (success) {
+                val notification = userNotifications.find { it.id == notificationId }
+                notification?.let {
+                    if (!it.isRead) {
+                        unreadNotificationCount = Math.max(0, unreadNotificationCount - 1)
+                    }
+                }
+            }
+            onComplete(success)
+        }
+    }
+
+    fun getUnreadNotificationCount(): Int {
+        return unreadNotificationCount
+    }
+}
