@@ -653,10 +653,12 @@ class FirestoreManager {
         }
 
         fun addNewPost(post: Post, onComplete: (Boolean) -> Unit = {}) {
+            Log.d(TAG, "Adding new post with ID: ${post.id}")
             db.collection(POSTS_COLLECTION)
-                .add(post)
+                .document(post.id)
+                .set(post)
                 .addOnSuccessListener {
-                    Log.d(TAG, "Post added successfully with ID: ${it.id}")
+                    Log.d(TAG, "Post added successfully with ID: ${post.id}")
                     onComplete(true)
                 }
                 .addOnFailureListener { e ->
