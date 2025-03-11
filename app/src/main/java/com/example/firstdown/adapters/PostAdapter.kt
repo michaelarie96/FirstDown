@@ -48,6 +48,10 @@ class PostAdapter(private var posts: List<Post> = emptyList()) :
         diffResult.dispatchUpdatesTo(this)
     }
 
+    fun getCurrentPosts(): List<Post> {
+        return posts
+    }
+
     inner class PostViewHolder(private val binding: ItemPostBinding) :
         RecyclerView.ViewHolder(binding.root) {
 

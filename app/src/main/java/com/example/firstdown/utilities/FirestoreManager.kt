@@ -4,6 +4,7 @@ import android.util.Log
 import com.example.firstdown.model.*
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
+import com.google.firebase.firestore.ListenerRegistration
 import com.google.firebase.firestore.Query
 import kotlinx.coroutines.tasks.await
 
@@ -681,6 +682,14 @@ class FirestoreManager {
                 }
         }
 
+        fun createNotification(notification: Notification, onComplete: (Boolean) -> Unit = {}) {
+            Log.d("DataManager", "Creating notification in Firestore: ${notification.id}, recipient: ${notification.recipientUserName}")
+            FirestoreManager.addNotification(notification) { success ->
+                Log.d("DataManager", "Notification created in Firestore: $success")
+                onComplete(success)
+            }
+        }
+
         fun getNotificationsForUser(userName: String, onComplete: (List<Notification>) -> Unit) {
             db.collection(NOTIFICATIONS_COLLECTION)
                 .whereEqualTo("recipientUserName", userName)
@@ -707,6 +716,47 @@ class FirestoreManager {
                 .addOnFailureListener { e ->
                     Log.e(TAG, "Error updating notification: $e")
                     onComplete(false)
+                }
+        }
+
+        fun addPostListener(postId: String, onUpdate: (Post?) -> Unit): ListenerRegistration {
+            Log.d(TAG, "Setting up real-time listener for post: $postId")
+            return db.collection(POSTS_COLLECTION)
+                .document(postId)
+                .addSnapshotListener { snapshot, e ->
+                    if (e != null) {
+                        Log.e(TAG, "Listen failed for post: $postId", e)
+                        return@addSnapshotListener
+                    }
+
+                    if (snapshot != null) {
+                        if (snapshot.exists()) {
+                            Log.d(TAG, "Real-time update received for post: $postId")
+                            val post = snapshot.toObject(Post::class.java)
+                            onUpdate(post)
+                        } else {
+                            Log.d(TAG, "Post document doesn't exist: $postId")
+                        }
+                    } else {
+                        Log.d(TAG, "Null snapshot received for post: $postId")
+                    }
+                }
+        }
+
+        fun addNotificationsListener(userName: String, onUpdate: (List<Notification>) -> Unit): ListenerRegistration {
+            return db.collection(NOTIFICATIONS_COLLECTION)
+                .whereEqualTo("recipientUserName", userName)
+                .addSnapshotListener { snapshot, e ->
+                    if (e != null) {
+                        Log.e(TAG, "Listen failed for notifications", e)
+                        return@addSnapshotListener
+                    }
+
+                    if (snapshot != null) {
+                        val notifications = snapshot.toObjects(Notification::class.java)
+                            .sortedByDescending { it.timestamp } // Sort in memory instead of in the query
+                        onUpdate(notifications)
+                    }
                 }
         }
     }

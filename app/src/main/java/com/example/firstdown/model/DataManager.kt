@@ -5,6 +5,7 @@ import com.example.firstdown.R
 import com.example.firstdown.utilities.FirestoreManager
 import com.example.firstdown.utilities.SharedPreferencesManager
 import com.google.firebase.auth.FirebaseAuth
+import com.google.firebase.firestore.ListenerRegistration
 import com.google.gson.Gson
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -44,6 +45,9 @@ object DataManager {
 
     private val userNotifications = mutableListOf<Notification>()
     private var unreadNotificationCount = 0
+
+    private var notificationsListener: ListenerRegistration? = null
+    private var activePostListeners = mutableMapOf<String, ListenerRegistration>()
 
     private var hasStartedLearning = false
     private var isProgressLoaded = false
@@ -910,7 +914,12 @@ object DataManager {
                             timestamp = System.currentTimeMillis()
                         )
 
-                        createNotification(notification)
+                        Log.d("DataManager", "Creating notification for ${post.userName} from $currentUserName, notification ID: $notificationId")
+                        createNotification(notification) { success ->
+                            Log.d("DataManager", "Notification creation result: $success")
+                        }
+                    } else {
+                        Log.d("DataManager", "Not creating notification. post.userName: ${post.userName}, currentUserName: $currentUserName")
                     }
 
                     post.likes + 1
@@ -922,6 +931,7 @@ object DataManager {
                 // Update the post in Firestore
                 val updates = mapOf("likes" to updatedLikes)
 
+                Log.d("DataManager", "Updating post $postId likes to $updatedLikes")
                 FirestoreManager.updatePost(postId, updates) {
                     Log.d("DataManager", "Post $postId likes updated to $updatedLikes")
                     onComplete(updatedLikes, !isCurrentlyLiked)
@@ -962,5 +972,36 @@ object DataManager {
 
     fun getUnreadNotificationCount(): Int {
         return unreadNotificationCount
+    }
+
+    fun setupNotificationsListener(userName: String, onUpdate: (List<Notification>) -> Unit) {
+        // Remove any existing listener
+        notificationsListener?.remove()
+
+        // Set up a new listener
+        notificationsListener = FirestoreManager.addNotificationsListener(userName) { notifications ->
+            userNotifications.clear()
+            userNotifications.addAll(notifications)
+            unreadNotificationCount = notifications.count { !it.isRead }
+            onUpdate(notifications)
+        }
+    }
+
+    fun setupPostListener(postId: String, onUpdate: (Post?) -> Unit) {
+        // Remove any existing listener
+        activePostListeners[postId]?.remove()
+
+        // Set up a new listener
+        activePostListeners[postId] = FirestoreManager.addPostListener(postId) { post ->
+            onUpdate(post)
+        }
+    }
+
+    fun clearAllListeners() {
+        notificationsListener?.remove()
+        notificationsListener = null
+
+        activePostListeners.values.forEach { it.remove() }
+        activePostListeners.clear()
     }
 }

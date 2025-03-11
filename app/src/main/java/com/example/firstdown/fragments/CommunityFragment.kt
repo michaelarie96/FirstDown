@@ -4,8 +4,11 @@ import android.app.AlertDialog
 import android.graphics.Color
 import android.graphics.drawable.ColorDrawable
 import android.os.Bundle
+import android.os.Handler
+import android.os.Looper
 import android.text.Editable
 import android.text.TextWatcher
+import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -43,6 +46,14 @@ class CommunityFragment : Fragment(), PostAdapter.PostInteractionListener {
     private lateinit var notificationAdapter: NotificationDropdownAdapter
     private var currentUserName: String = ""
 
+    private val notificationHandler = Handler(Looper.getMainLooper())
+    private val notificationRunnable = object : Runnable {
+        override fun run() {
+            checkNotifications()
+            notificationHandler.postDelayed(this, 5000) // Check every 5 seconds
+        }
+    }
+
     override fun onCreateView(
         inflater: LayoutInflater,
         container: ViewGroup?,
@@ -56,11 +67,16 @@ class CommunityFragment : Fragment(), PostAdapter.PostInteractionListener {
         super.onViewCreated(view, savedInstanceState)
 
         currentUserName = FirebaseAuth.getInstance().currentUser?.displayName ?: "Anonymous"
+        Log.d("CommunityFragment", "Current user name: $currentUserName")
 
         setupUI()
         setupListeners()
         displayPosts()
         checkNotifications()
+
+        // Start polling as a fallback
+        startNotificationPolling()
+        startPostsRefresh()
     }
 
     private fun setupUI() {
@@ -101,6 +117,25 @@ class CommunityFragment : Fragment(), PostAdapter.PostInteractionListener {
             } else {
                 showNotificationsPopup()
             }
+        }
+
+        // Real-time notifications listener
+        if (currentUserName.isNotEmpty() && currentUserName != "Anonymous") {
+            Log.d("CommunityFragment", "Setting up notifications listener for: $currentUserName")
+            DataManager.setupNotificationsListener(currentUserName) { notifications ->
+                Log.d("CommunityFragment", "Received notification update. Unread count: ${notifications.count { !it.isRead }}")
+                val unreadCount = notifications.count { !it.isRead }
+                activity?.runOnUiThread {
+                    binding.notificationIndicator.visibility = if (unreadCount > 0) View.VISIBLE else View.GONE
+
+                    // If notification popup is visible, update it
+                    if (popupWindow?.isShowing == true) {
+                        notificationAdapter.updateNotifications(notifications)
+                    }
+                }
+            }
+        } else {
+            Log.d("CommunityFragment", "Not setting up notifications listener. currentUserName: $currentUserName")
         }
     }
 
@@ -295,6 +330,20 @@ class CommunityFragment : Fragment(), PostAdapter.PostInteractionListener {
     private fun displayPosts() {
         viewModel.getAllPosts { allPosts ->
             displayFilteredPosts(allPosts)
+
+            // Set up listeners for all visible posts
+            allPosts.forEach { post ->
+                DataManager.setupPostListener(post.id) { updatedPost ->
+                    if (updatedPost != null) {
+                        // Find and update the post in the adapter
+                        val currentPosts = postAdapter.getCurrentPosts()
+                        val updatedPosts = currentPosts.map {
+                            if (it.id == updatedPost.id) updatedPost.copy(likedByCurrentUser = it.likedByCurrentUser) else it
+                        }
+                        postAdapter.updatePosts(updatedPosts)
+                    }
+                }
+            }
         }
     }
 
@@ -323,13 +372,68 @@ class CommunityFragment : Fragment(), PostAdapter.PostInteractionListener {
         }
     }
 
+    private fun startNotificationPolling() {
+        notificationHandler.postDelayed(object : Runnable {
+            override fun run() {
+                // Use regular (non-listener) method to fetch notifications
+                DataManager.getUserNotifications(currentUserName) { notifications ->
+                    val unreadCount = notifications.count { !it.isRead }
+                    activity?.runOnUiThread {
+                        binding.notificationIndicator.visibility = if (unreadCount > 0) View.VISIBLE else View.GONE
+
+                        // If notification popup is visible, update it
+                        if (popupWindow?.isShowing == true) {
+                            notificationAdapter.updateNotifications(notifications)
+                        }
+                    }
+                }
+
+                // Continue polling
+                notificationHandler.postDelayed(this, 5000) // Poll every 5 seconds
+            }
+        }, 3000) // Start after 3 seconds
+    }
+
+    private fun startPostsRefresh() {
+        notificationHandler.postDelayed(object : Runnable {
+            override fun run() {
+                // Refresh posts list
+                displayPosts()
+
+                // Continue refreshing
+                notificationHandler.postDelayed(this, 10000) // Refresh every 10 seconds
+            }
+        }, 5000) // Start after 5 seconds
+    }
+
+    override fun onResume() {
+        super.onResume()
+
+        // Start notification checks
+        notificationHandler.post(notificationRunnable)
+
+        // Refresh posts when returning to fragment
+        displayPosts()
+    }
+
     override fun onPause() {
         super.onPause()
+
+        // Stop checking for notifications when leaving fragment
+        notificationHandler.removeCallbacks(notificationRunnable)
+
         popupWindow?.dismiss()
     }
 
     override fun onDestroyView() {
         super.onDestroyView()
+
+        // Clean up all listeners
+        DataManager.clearAllListeners()
+
+        // Remove all callbacks from the handler
+        notificationHandler.removeCallbacksAndMessages(null)
+
         _binding = null
     }
 }
