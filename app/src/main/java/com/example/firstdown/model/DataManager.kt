@@ -96,7 +96,7 @@ object DataManager {
         Post(
             id = "post1",
             userProfileImage = "https://i.pravatar.cc/150?img=1",
-            userName = "John Cooper",
+            userName = "John Cooper1",
             timeAgo = "2 hours ago",
             content = "What's the best way to improve ball control during high-pressure situations? Any drills recommendations?",
             imageUrl = null,
