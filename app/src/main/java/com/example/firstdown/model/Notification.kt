@@ -7,5 +7,5 @@ data class Notification(
     val postId: String = "",
     val likerName: String = "",  // Name of the user who liked
     val timestamp: Long = System.currentTimeMillis(),
-    val isRead: Boolean = false
+    var isRead: Boolean = false
 )

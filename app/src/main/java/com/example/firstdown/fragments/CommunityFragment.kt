@@ -143,12 +143,18 @@ class CommunityFragment : Fragment(), PostAdapter.PostInteractionListener {
         if (currentUserName.isNotEmpty() && currentUserName != "Anonymous") {
             DataManager.getUserNotifications(currentUserName) { notifications ->
                 val unreadCount = notifications.count { !it.isRead }
-                binding.notificationIndicator.visibility = if (unreadCount > 0) View.VISIBLE else View.GONE
+
+                // Update UI on main thread
+                activity?.runOnUiThread {
+                    binding.notificationIndicator.visibility = if (unreadCount > 0) View.VISIBLE else View.GONE
+                }
             }
         }
     }
 
     private fun showNotificationsPopup() {
+        logNotificationStatus("Loading notifications for popup")
+
         // Create popup window
         val inflater = LayoutInflater.from(requireContext())
         val popupView = inflater.inflate(R.layout.dropdown_notification, null)
@@ -187,6 +193,7 @@ class CommunityFragment : Fragment(), PostAdapter.PostInteractionListener {
 
         // Load notifications
         DataManager.getUserNotifications(currentUserName) { notifications ->
+            logNotificationStatus("Loading notifications for popup")
             if (notifications.isEmpty()) {
                 recyclerView.visibility = View.GONE
                 emptyView.visibility = View.VISIBLE
@@ -206,26 +213,32 @@ class CommunityFragment : Fragment(), PostAdapter.PostInteractionListener {
     }
 
     private fun handleNotificationClick(notification: Notification) {
+        logNotificationStatus("Before marking notification ${notification.id} as read")
+
         // Mark notification as read
         DataManager.markNotificationAsRead(notification.id) { success ->
             if (success) {
-                // Update notification list
-                DataManager.getUserNotifications(currentUserName) { notifications ->
-                    notificationAdapter.updateNotifications(notifications)
+                logNotificationStatus("After marking notification ${notification.id} as read")
 
-                    // Update notification indicator
-                    val unreadCount = notifications.count { !it.isRead }
-                    binding.notificationIndicator.visibility = if (unreadCount > 0) View.VISIBLE else View.GONE
+                // After marking as read, completely reload notification data from source
+                activity?.runOnUiThread {
+                    // Force a complete refresh of notifications
+                    DataManager.getUserNotifications(currentUserName) { freshNotifications ->
+                        // Update adapter with completely fresh data
+                        notificationAdapter.updateNotifications(freshNotifications)
+
+                        // Update notification indicator
+                        val unreadCount = freshNotifications.count { !it.isRead }
+                        binding.notificationIndicator.visibility = if (unreadCount > 0) View.VISIBLE else View.GONE
+                    }
                 }
-
-                // Handle navigation to the post
-                // This would be a future enhancement
-                Toast.makeText(requireContext(), "Notification clicked: ${notification.message}", Toast.LENGTH_SHORT).show()
             }
         }
     }
 
     private fun markAllNotificationsAsRead() {
+        logNotificationStatus("Before marking all notifications as read")
+
         DataManager.getUserNotifications(currentUserName) { notifications ->
             val unreadNotifications = notifications.filter { !it.isRead }
 
@@ -237,10 +250,15 @@ class CommunityFragment : Fragment(), PostAdapter.PostInteractionListener {
                         processedCount++
 
                         if (processedCount == unreadNotifications.size) {
-                            // All processed, refresh notifications
-                            DataManager.getUserNotifications(currentUserName) { updatedNotifications ->
-                                notificationAdapter.updateNotifications(updatedNotifications)
-                                binding.notificationIndicator.visibility = View.GONE
+                            logNotificationStatus("After marking all notifications as read")
+
+                            // Final refresh after all are processed
+                            activity?.runOnUiThread {
+                                // Force a complete refresh from server
+                                DataManager.getUserNotifications(currentUserName) { updatedNotifications ->
+                                    notificationAdapter.updateNotifications(updatedNotifications)
+                                    binding.notificationIndicator.visibility = View.GONE
+                                }
                             }
                         }
                     }
@@ -404,6 +422,19 @@ class CommunityFragment : Fragment(), PostAdapter.PostInteractionListener {
                 notificationHandler.postDelayed(this, 10000) // Refresh every 10 seconds
             }
         }, 5000) // Start after 5 seconds
+    }
+
+    private fun logNotificationStatus(message: String) {
+        DataManager.getUserNotifications(currentUserName) { notifications ->
+            val unreadCount = notifications.count { !it.isRead }
+            val totalCount = notifications.size
+            Log.d("NotificationDebug", "$message - Total: $totalCount, Unread: $unreadCount")
+
+            // Log details of each notification
+            notifications.forEachIndexed { index, notif ->
+                Log.d("NotificationDebug", "[$index] ID: ${notif.id}, Read: ${notif.isRead}, Message: ${notif.message}")
+            }
+        }
     }
 
     override fun onResume() {

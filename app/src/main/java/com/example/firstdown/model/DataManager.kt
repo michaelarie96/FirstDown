@@ -959,11 +959,15 @@ object DataManager {
     fun markNotificationAsRead(notificationId: String, onComplete: (Boolean) -> Unit = {}) {
         FirestoreManager.updateNotification(notificationId, mapOf("isRead" to true)) { success ->
             if (success) {
-                val notification = userNotifications.find { it.id == notificationId }
-                notification?.let {
-                    if (!it.isRead) {
-                        unreadNotificationCount = Math.max(0, unreadNotificationCount - 1)
-                    }
+                // Find the notification index
+                val index = userNotifications.indexOfFirst { it.id == notificationId }
+                if (index != -1) {
+                    // Update by creating a new object with the read flag set to true
+                    val updatedNotification = userNotifications[index].copy(isRead = true)
+                    userNotifications[index] = updatedNotification
+
+                    // Recalculate unread count
+                    unreadNotificationCount = userNotifications.count { !it.isRead }
                 }
             }
             onComplete(success)

@@ -696,7 +696,18 @@ class FirestoreManager {
                 .orderBy("timestamp", Query.Direction.DESCENDING)
                 .get()
                 .addOnSuccessListener { result ->
-                    val notifications = result.toObjects(Notification::class.java)
+                    // Manually create Notification objects from document data
+                    val notifications = result.documents.map { doc ->
+                        Notification(
+                            id = doc.id,
+                            recipientUserName = doc.getString("recipientUserName") ?: "",
+                            message = doc.getString("message") ?: "",
+                            postId = doc.getString("postId") ?: "",
+                            likerName = doc.getString("likerName") ?: "",
+                            timestamp = doc.getLong("timestamp") ?: System.currentTimeMillis(),
+                            isRead = doc.getBoolean("isRead") ?: false
+                        )
+                    }
                     onComplete(notifications)
                 }
                 .addOnFailureListener { exception ->
@@ -753,8 +764,19 @@ class FirestoreManager {
                     }
 
                     if (snapshot != null) {
-                        val notifications = snapshot.toObjects(Notification::class.java)
-                            .sortedByDescending { it.timestamp } // Sort in memory instead of in the query
+                        // Manually create Notification objects from document data
+                        val notifications = snapshot.documents.map { doc ->
+                            Notification(
+                                id = doc.id,
+                                recipientUserName = doc.getString("recipientUserName") ?: "",
+                                message = doc.getString("message") ?: "",
+                                postId = doc.getString("postId") ?: "",
+                                likerName = doc.getString("likerName") ?: "",
+                                timestamp = doc.getLong("timestamp") ?: System.currentTimeMillis(),
+                                isRead = doc.getBoolean("isRead") ?: false
+                            )
+                        }.sortedByDescending { it.timestamp }
+
                         onUpdate(notifications)
                     }
                 }
