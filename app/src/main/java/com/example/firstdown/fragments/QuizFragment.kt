@@ -14,6 +14,7 @@ import androidx.navigation.fragment.navArgs
 import com.example.firstdown.R
 import com.example.firstdown.databinding.FragmentQuizBinding
 import com.example.firstdown.model.Quiz
+import com.example.firstdown.utilities.VibrationManager
 import com.example.firstdown.viewmodel.QuizViewModel
 
 class QuizFragment : Fragment() {
@@ -152,6 +153,7 @@ class QuizFragment : Fragment() {
 
             // Mark quiz as completed
             viewModel.markQuizCompleted(chapterId, score) {
+                VibrationManager.vibrate(requireContext())
                 Toast.makeText(requireContext(), "Quiz completed! Your score: $score%", Toast.LENGTH_LONG).show()
 
                 // Get the course ID for this chapter

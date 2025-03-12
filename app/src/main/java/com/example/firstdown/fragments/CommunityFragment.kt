@@ -26,6 +26,7 @@ import com.example.firstdown.model.DataManager
 import com.example.firstdown.model.Notification
 import com.example.firstdown.model.Post
 import com.example.firstdown.utilities.TimeUtils
+import com.example.firstdown.utilities.VibrationManager
 import com.example.firstdown.viewmodel.CommunityViewModel
 import com.google.android.material.tabs.TabLayout
 import com.google.android.material.textfield.TextInputEditText
@@ -323,12 +324,13 @@ class CommunityFragment : Fragment(), PostAdapter.PostInteractionListener {
             likes = 0,
             comments = 0,
             likedByCurrentUser = false,
-            timestamp = timestamp // Add timestamp here
+            timestamp = timestamp
         )
 
         // Add the post through ViewModel
         viewModel.addNewPost(newPost) { success ->
             if (success) {
+                VibrationManager.vibrate(requireContext())
                 Toast.makeText(requireContext(), "Post created successfully!", Toast.LENGTH_SHORT).show()
                 // Refresh the posts list
                 viewModel.getAllPosts { allPosts ->
