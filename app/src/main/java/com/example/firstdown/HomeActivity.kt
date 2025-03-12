@@ -40,6 +40,33 @@ class HomeActivity : AppCompatActivity() {
                 // Set up bottom navigation with the nav controller
                 val navView: BottomNavigationView = binding.bottomNavigation
                 navView.setupWithNavController(navController)
+
+                // Handle reselection for courses tab
+                binding.bottomNavigation.setOnItemReselectedListener { item ->
+                    if (item.itemId == R.id.navigation_courses) {
+                        val currentDestinationId = navController.currentDestination?.id
+                        if (currentDestinationId != null &&
+                            currentDestinationId != R.id.navigation_courses) {
+                            navController.popBackStack(R.id.navigation_courses, false)
+                        }
+                    }
+                }
+
+                // Add a destination change listener to update the selected tab
+                navController.addOnDestinationChangedListener { _, destination, _ ->
+                    val menuItem = when (destination.id) {
+                        R.id.navigation_home -> R.id.navigation_home
+                        R.id.navigation_courses, R.id.ChaptersFragment, R.id.lessonFragment, R.id.quizFragment ->
+                            R.id.navigation_courses
+                        R.id.navigation_community -> R.id.navigation_community
+                        R.id.navigation_profile -> R.id.navigation_profile
+                        else -> null
+                    }
+
+                    if (menuItem != null) {
+                        binding.bottomNavigation.menu.findItem(menuItem)?.isChecked = true
+                    }
+                }
             } else {
                 // Handle the case where nav host fragment is not found, helps with debugging
                 throw IllegalStateException("NavHostFragment not found in activity_home.xml")
