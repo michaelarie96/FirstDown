@@ -31,7 +31,7 @@ class LoginActivity : AppCompatActivity() {
         // Check for existing user *and* if the intent is for sign-in
         val auth = FirebaseAuth.getInstance()
         if (auth.currentUser != null) {
-            navigateToHome()
+            navigateToHome(false)
         } else {
             //Only start the sign-in flow if the user is not currently signed in.
             startSignIn()
@@ -57,11 +57,13 @@ class LoginActivity : AppCompatActivity() {
     private fun onSignInResult(result: FirebaseAuthUIAuthenticationResult) {
         if (result.resultCode == RESULT_OK) {
             val user = FirebaseAuth.getInstance().currentUser
+            val isNewUser = result.idpResponse?.isNewUser ?: false
+
             Toast.makeText(this, "Welcome ${user?.displayName}", Toast.LENGTH_SHORT).show()
 
             // Load user progress before navigating
             DataManager.loadUserProgress {
-                navigateToHome()
+                navigateToHome(isNewUser)
             }
         } else {
             val response = result.idpResponse
@@ -75,9 +77,10 @@ class LoginActivity : AppCompatActivity() {
         }
     }
 
-    private fun navigateToHome() {
+    private fun navigateToHome(isNewUser: Boolean) {
         setResult(RESULT_OK)
         val intent = Intent(this, HomeActivity::class.java)
+        intent.putExtra("IS_NEW_USER", isNewUser)
         startActivity(intent)
         finish()
     }

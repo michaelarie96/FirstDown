@@ -94,7 +94,11 @@ class HomeFragment : Fragment() {
     }
 
     private fun setupUserInfo(currentUser: User) {
-        binding.tvGreeting.text = getString(R.string.greeting, currentUser.name)
+        val displayName = currentUser.name.ifEmpty {
+            "User"  // Default name if null or empty
+        }
+
+        binding.tvGreeting.text = getString(R.string.greeting, displayName)
 
         viewModel.getUserStreak { streak ->
             binding.tvStreak.text = getString(R.string.day_streak, streak)
