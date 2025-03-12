@@ -6,8 +6,6 @@ import android.graphics.drawable.ColorDrawable
 import android.os.Bundle
 import android.os.Handler
 import android.os.Looper
-import android.text.Editable
-import android.text.TextWatcher
 import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
@@ -384,9 +382,7 @@ class CommunityFragment : Fragment(), PostAdapter.PostInteractionListener {
     }
 
     override fun onLikeClicked(post: Post, position: Int) {
-        // Update like count through ViewModel
         viewModel.toggleLike(post.id) { updatedLikes ->
-            // After toggling like, refresh the posts to update UI
             viewModel.getAllPosts { refreshedPosts ->
                 displayFilteredPosts(refreshedPosts)
             }
@@ -396,7 +392,6 @@ class CommunityFragment : Fragment(), PostAdapter.PostInteractionListener {
     private fun startNotificationPolling() {
         notificationHandler.postDelayed(object : Runnable {
             override fun run() {
-                // Use regular (non-listener) method to fetch notifications
                 DataManager.getUserNotifications(currentUserName) { notifications ->
                     val unreadCount = notifications.count { !it.isRead }
                     activity?.runOnUiThread {
@@ -468,7 +463,6 @@ class CommunityFragment : Fragment(), PostAdapter.PostInteractionListener {
     override fun onDestroyView() {
         super.onDestroyView()
 
-        // Clean up all listeners
         DataManager.clearAllListeners()
 
         // Remove all callbacks from the handler

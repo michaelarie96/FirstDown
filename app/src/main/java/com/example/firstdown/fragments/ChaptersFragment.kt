@@ -27,7 +27,6 @@ class ChaptersFragment : Fragment(), ChapterAdapter.ChapterClickListener {
     private lateinit var chapterAdapter: ChapterAdapter
     private lateinit var course: Course
 
-    // Will be used to retrieve arguments passed to the fragment
     private val args: ChaptersFragmentArgs by navArgs()
 
     override fun onCreateView(

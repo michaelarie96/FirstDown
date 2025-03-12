@@ -37,14 +37,12 @@ class CoursesFragment : Fragment(), CourseAdapter.OnCourseClickListener {
     private fun setupUI() {
         setupRecyclerView()
 
-        // Show loading indicator
         binding.progressBarCourses.visibility = View.VISIBLE
         binding.rvCourses.visibility = View.GONE
 
         viewModel.getAllCourses { courses ->
             courseAdapter.updateCourses(courses)
 
-            // Hide loading indicator
             binding.progressBarCourses.visibility = View.GONE
             binding.rvCourses.visibility = View.VISIBLE
         }
@@ -53,18 +51,14 @@ class CoursesFragment : Fragment(), CourseAdapter.OnCourseClickListener {
     private fun setupRecyclerView() {
         binding.rvCourses.layoutManager = LinearLayoutManager(requireContext())
 
-        // RecyclerView optimizations
         binding.rvCourses.setHasFixedSize(true)
         binding.rvCourses.setItemViewCacheSize(10)
 
-        // Create and set the adapter
         courseAdapter = CourseAdapter(emptyList(), this)
         binding.rvCourses.adapter = courseAdapter
     }
 
-    // Handle course click events
     override fun onCourseClick(course: Course) {
-        // Navigate to ChaptersFragment using SafeArgs
         val action = CoursesFragmentDirections.actionNavigationCoursesToChaptersFragment(course.id)
         findNavController().navigate(action)
     }

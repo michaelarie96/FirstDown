@@ -223,6 +223,13 @@ class HomeFragment : Fragment() {
         }
     }
 
+    override fun onResume() {
+        super.onResume()
+
+        setupTodayGoal()
+        setupContinueLearning()
+    }
+
     override fun onDestroyView() {
         super.onDestroyView()
         _binding = null

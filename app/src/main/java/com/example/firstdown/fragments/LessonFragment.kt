@@ -26,10 +26,8 @@ class LessonFragment : Fragment() {
     private val binding get() = _binding!!
     private val viewModel: LessonViewModel by viewModels()
 
-    // Get arguments using Safe Args
     private val args: LessonFragmentArgs by navArgs()
 
-    // Lesson ID
     private lateinit var lessonId: String
 
     override fun onCreateView(
@@ -44,10 +42,7 @@ class LessonFragment : Fragment() {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
-        // Get data from arguments and setup UI
         setupUI()
-
-        // Setup listeners
         setupListeners()
     }
 
@@ -150,17 +145,14 @@ class LessonFragment : Fragment() {
     }
 
     private fun setupListeners() {
-        // Back button
         binding.btnBack.setOnClickListener {
             findNavController().popBackStack(R.id.ChaptersFragment, false)
         }
 
-        // Previous button
         binding.btnPrevious.setOnClickListener {
             navigateToPreviousLesson()
         }
 
-        // Next button
         binding.btnNext.setOnClickListener {
             navigateToNextLesson()
         }
