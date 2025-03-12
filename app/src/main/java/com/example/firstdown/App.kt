@@ -1,6 +1,7 @@
 package com.example.firstdown
 
 import android.app.Application
+import android.util.Log
 import com.example.firstdown.model.DataManager
 import com.example.firstdown.utilities.SharedPreferencesManager
 import com.google.firebase.firestore.FirebaseFirestore
