@@ -72,27 +72,6 @@ object DataManager {
         "Review game film to identify tendencies in your opponents"
     )
 
-    private val achievements = mutableListOf(
-        Achievement(
-            id = "high-score-1",
-            title = "Quiz Master",
-            description = "Achieved a quiz score above 80%",
-            type = AchievementType.HIGH_QUIZ_SCORE,
-            iconResId = R.drawable.ic_trophy,
-            earnedDate = System.currentTimeMillis() - (5 * 24 * 60 * 60 * 1000), // 5 days ago
-            relatedId = "basic-rules-quiz"
-        ),
-        Achievement(
-            id = "chapter-complete-1",
-            title = "Rules Expert",
-            description = "Completed the Basic Rules chapter",
-            type = AchievementType.CHAPTER_COMPLETED,
-            iconResId = R.drawable.ic_flag,
-            earnedDate = System.currentTimeMillis() - (3 * 24 * 60 * 60 * 1000), // 3 days ago
-            relatedId = "basic-rules"
-        )
-    )
-
     private val posts = listOf(
         Post(
             id = "post1",
@@ -669,10 +648,6 @@ object DataManager {
         }
     }
 
-    fun getLatestAchievement(onComplete: (Achievement?) -> Unit) {
-        onComplete(achievements.maxByOrNull { it.earnedDate })
-    }
-
     fun isLastLessonInChapter(lessonId: String, onComplete: (Boolean) -> Unit) {
         getLessonById(lessonId) { lesson ->
             if (lesson == null) {
@@ -837,11 +812,6 @@ object DataManager {
 
     fun getRandomQuickTip(onComplete: (String) -> Unit) {
         onComplete(quickTips.random())
-    }
-
-    fun addAchievement(achievement: Achievement) {
-        achievements.add(achievement)
-        // In a future implementation, we'd save this to Firestore
     }
 
     fun getAllPosts(onComplete: (List<Post>) -> Unit) {

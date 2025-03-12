@@ -14,7 +14,6 @@
     <string name="today_goal">Today\'s Goal</string>
     <string name="continue_learning">Continue Learning</string>
     <string name="min_lesson">%d min lesson</string>
-    <string name="latest_achievement">Latest Achievement</string>
     <string name="quick_tip">Quick Tip</string>
     <string name="completed_str">Completed</string>
     <string name="iv_profile_desc">Profile</string>
@@ -23,7 +22,6 @@
     <string name="complete_lesson_goal">Complete %s Module</string>
     <string name="start_str">Start</string>
     <string name="all_lessons_completed">Congratulations! You\'ve completed all lessons.</string>
-    <string name="earned_days_ago">Earned %d days ago</string>
     <string name="start_learning">Start Learning</string>
 
     <!-- Progress Screen -->
@@ -44,7 +42,6 @@
     <string name="lessons">Lessons</string>
     <string name="score">Score</string>
     <string name="time">Time</string>
-    <string name="achievements">Achievements</string>
     <string name="recent_activity">Recent Activity</string>
     <!-- TODO: Remove or change this placeholder text -->
     <string name="hello_blank_fragment">Hello blank fragment</string>

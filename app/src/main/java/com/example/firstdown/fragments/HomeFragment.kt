@@ -53,7 +53,6 @@ class HomeFragment : Fragment() {
             setupUserInfo(currentUser)
             setupTodayGoal()
             setupContinueLearning()
-            setupLatestAchievement()
             setupQuickTip()
 
             binding.loadingSpinner.visibility = View.GONE
@@ -113,27 +112,9 @@ class HomeFragment : Fragment() {
         }
     }
 
-    private fun setupLatestAchievement() {
-        viewModel.getLatestAchievement { latestAchievement ->
-            if (latestAchievement != null) {
-                val achievementCard = binding.layoutAchievements.getChildAt(0)
-
-                val tvAchievementTitle = achievementCard.findViewById<TextView>(R.id.tv_achievement_title)
-                val tvAchievementDesc = achievementCard.findViewById<TextView>(R.id.tv_achievement_description)
-                val tvAchievementDate = achievementCard.findViewById<TextView>(R.id.tv_achievement_date)
-
-                tvAchievementTitle.text = latestAchievement.title
-                tvAchievementDesc.text = latestAchievement.description
-
-                val daysAgo = (System.currentTimeMillis() - latestAchievement.earnedDate) / (1000 * 60 * 60 * 24)
-                tvAchievementDate.text = getString(R.string.earned_days_ago, daysAgo.toInt())
-            }
-        }
-    }
-
     private fun setupQuickTip() {
         viewModel.getRandomQuickTip { quickTip ->
-            val tipCard = binding.layoutAchievements.getChildAt(1)
+            val tipCard = binding.layoutTips.getChildAt(0)
             val tvTipContent = tipCard.findViewById<TextView>(R.id.tv_tip_content)
 
             tvTipContent.text = quickTip

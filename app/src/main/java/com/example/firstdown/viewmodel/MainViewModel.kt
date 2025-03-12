@@ -1,7 +1,6 @@
 package com.example.firstdown.viewmodel
 
 import androidx.lifecycle.ViewModel
-import com.example.firstdown.model.Achievement
 import com.example.firstdown.model.Chapter
 import com.example.firstdown.model.Course
 import com.example.firstdown.model.DataManager
@@ -32,10 +31,6 @@ class MainViewModel : ViewModel() {
 
     fun hasStartedAnyLearning(onComplete: (Boolean) -> Unit) {
         DataManager.hasStartedLearning(onComplete)
-    }
-
-    fun getLatestAchievement(onComplete: (Achievement?) -> Unit) {
-        DataManager.getLatestAchievement(onComplete)
     }
 
     fun getRandomQuickTip(onComplete: (String) -> Unit) {
