@@ -56,6 +56,9 @@ object DataManager {
     private var hasStartedLearning = false
     private var isProgressLoaded = false
 
+    private const val KEY_TODAY_GOAL_DATE = "today_goal_date"
+    private const val KEY_TODAY_GOAL_CHAPTER_ID = "today_goal_chapter_id"
+
     private val quickTips = listOf(
         "Keep your eyes on the ball's laces while throwing",
         "When catching, form a triangle with your thumbs and index fingers",
@@ -185,7 +188,7 @@ object DataManager {
     }
 
     // Initialize the database with the static data
-     private fun initializeFirestoreDatabase(onComplete: () -> Unit) {
+    private fun initializeFirestoreDatabase(onComplete: () -> Unit) {
         FirestoreManager.initializeDatabase(
             courses = courses,
             chapters = chapters,
@@ -229,7 +232,10 @@ object DataManager {
                         saveProgressToSharedPreferences()
 
                         loadQuizScoresFromFirestore {
-                            Log.d("DataManager", "User progress and quiz scores loaded successfully from Firestore")
+                            Log.d(
+                                "DataManager",
+                                "User progress and quiz scores loaded successfully from Firestore"
+                            )
                             onComplete()
                         }
                     }
@@ -330,33 +336,37 @@ object DataManager {
 
         if (firebaseUser != null) {
             // Create a User object from Firebase
-            onComplete(User(
-                id = firebaseUser.uid,
-                name = firebaseUser.displayName ?: "Football Fan",
-                email = firebaseUser.email ?: "",
-                profileImage = firebaseUser.photoUrl?.toString(),
-                title = "Beginner",
-                streakDays = 0,
-                lessonsCompleted = completedLessons.size,
-                chaptersCompleted = completedChapters.size,
-                coursesCompleted = completedCourses.size,
-                quizScores = quizScores.toList(),
-                timeSpent = 0
-            ))
+            onComplete(
+                User(
+                    id = firebaseUser.uid,
+                    name = firebaseUser.displayName ?: "Football Fan",
+                    email = firebaseUser.email ?: "",
+                    profileImage = firebaseUser.photoUrl?.toString(),
+                    title = "Beginner",
+                    streakDays = 0,
+                    lessonsCompleted = completedLessons.size,
+                    chaptersCompleted = completedChapters.size,
+                    coursesCompleted = completedCourses.size,
+                    quizScores = quizScores.toList(),
+                    timeSpent = 0
+                )
+            )
         } else {
             // Fall back to default user
-            onComplete(User(
-                id = "user123",
-                name = "John Thompson",
-                email = "john@example.com",
-                title = "Quarterback in Training",
-                streakDays = 12,
-                lessonsCompleted = completedLessons.size,
-                chaptersCompleted = completedChapters.size,
-                coursesCompleted = completedCourses.size,
-                quizScores = listOf(85, 90, 92, 88),
-                timeSpent = 24 * 60
-            ))
+            onComplete(
+                User(
+                    id = "user123",
+                    name = "John Thompson",
+                    email = "john@example.com",
+                    title = "Quarterback in Training",
+                    streakDays = 12,
+                    lessonsCompleted = completedLessons.size,
+                    chaptersCompleted = completedChapters.size,
+                    coursesCompleted = completedCourses.size,
+                    quizScores = listOf(85, 90, 92, 88),
+                    timeSpent = 24 * 60
+                )
+            )
         }
     }
 
@@ -735,8 +745,10 @@ object DataManager {
                 val lastLesson = sortedLessons.lastOrNull()
                 val isLast = lastLesson?.id == lessonId
 
-                Log.d("DataManager", "isLastLessonInChapter: $isLast, lessonId=$lessonId, " +
-                        "lastLesson=${lastLesson?.id}, total lessons=${chapterLessons.size}")
+                Log.d(
+                    "DataManager", "isLastLessonInChapter: $isLast, lessonId=$lessonId, " +
+                            "lastLesson=${lastLesson?.id}, total lessons=${chapterLessons.size}"
+                )
                 onComplete(isLast)
             }
         }
@@ -791,31 +803,114 @@ object DataManager {
     fun getCurrentOrNextChapter(onComplete: (Pair<Course, Chapter>?) -> Unit) {
         getAllCourses { courses ->
             if (courses.isEmpty()) {
+                Log.d("DataManager", "No courses found")
                 onComplete(null)
                 return@getAllCourses
             }
 
-            // First, try to find an unlocked chapter with incomplete lessons
+            Log.d("DataManager", "Found ${courses.size} courses")
+
+            // First try to find a course the user has started but not completed
             for (course in courses) {
-                val unlockedChapter = course.chapters.find {
-                    !it.isLocked && it.lessons.any { lesson -> !completedLessons.contains(lesson.id) }
+                Log.d("DataManager", "Checking course: ${course.id}, title: ${course.title}")
+
+                // Skip if course is already completed
+                if (completedCourses.contains(course.id)) {
+                    Log.d("DataManager", "Course ${course.id} is already completed, skipping")
+                    continue
                 }
 
-                if (unlockedChapter != null) {
-                    onComplete(Pair(course, unlockedChapter))
+                // Log the chapter completion status
+                course.chapters.forEach { chapter ->
+                    val started = hasStartedChapter(chapter.id)
+                    val completed = isChapterCompleted(chapter.id)
+                    Log.d("DataManager", "Chapter ${chapter.id}: started=$started, completed=$completed, locked=${chapter.isLocked}")
+                }
+
+                // Check if any chapter in this course is started
+                val hasStartedCourse = course.chapters.any { hasStartedChapter(it.id) }
+
+                Log.d("DataManager", "Has started course ${course.id}: $hasStartedCourse")
+
+                if (hasStartedCourse) {
+                    // This is the current course the user is working on
+                    val nextChapter = findNextChapterInCourse(course)
+                    if (nextChapter != null) {
+                        Log.d("DataManager", "Found next chapter in started course: ${nextChapter.id}, title: ${nextChapter.title}")
+                        onComplete(Pair(course, nextChapter))
+                        return@getAllCourses
+                    } else {
+                        Log.d("DataManager", "No next chapter found in started course ${course.id}")
+                    }
+                }
+            }
+
+            Log.d("DataManager", "No started course with incomplete chapters found, checking all courses")
+
+            // If no current course with incomplete chapters, find first incomplete chapter in any course
+            for (course in courses) {
+                Log.d("DataManager", "Checking for any incomplete chapter in course ${course.id}")
+                val nextChapter = findNextChapterInCourse(course)
+                if (nextChapter != null) {
+                    Log.d("DataManager", "Found incomplete chapter: ${nextChapter.id} in course ${course.id}")
+                    onComplete(Pair(course, nextChapter))
                     return@getAllCourses
                 }
             }
 
-            // If no unlocked incomplete chapter found, return the first course's first chapter
+            Log.d("DataManager", "All courses complete or no next chapter found, using first course/chapter")
+
+            // If everything is completed or we couldn't find a next chapter, return first course/chapter
             val firstCourse = courses.first()
-            if (firstCourse.chapters.isNotEmpty()) {
-                onComplete(Pair(firstCourse, firstCourse.chapters.first()))
-                return@getAllCourses
+            val firstChapter = firstCourse.chapters.firstOrNull()
+
+            if (firstChapter != null) {
+                Log.d("DataManager", "Using first chapter ${firstChapter.id} of first course ${firstCourse.id}")
+                onComplete(Pair(firstCourse, firstChapter))
+            } else {
+                Log.d("DataManager", "No chapters found in first course")
+                onComplete(null)
+            }
+        }
+    }
+
+    private fun findNextChapterInCourse(course: Course): Chapter? {
+        Log.d("DataManager", "Finding next chapter in course ${course.id}")
+
+        // First check for any in-progress chapters
+        val inProgressChapter = course.chapters
+            .filter { !it.isLocked }
+            .find { chapter ->
+                val started = hasStartedChapter(chapter.id)
+                val completed = isChapterCompleted(chapter.id)
+                Log.d("DataManager", "Checking chapter ${chapter.id}: started=$started, completed=$completed")
+                started && !completed
             }
 
-            onComplete(null) // No courses or chapters found
+        if (inProgressChapter != null) {
+            Log.d("DataManager", "Found in-progress chapter: ${inProgressChapter.id}")
+            return inProgressChapter
         }
+
+        Log.d("DataManager", "No in-progress chapter found, looking for first uncompleted chapter")
+
+        // No in-progress chapter, find first uncompleted chapter
+        val firstUncompleted = course.chapters
+            .filter {
+                val unlocked = !it.isLocked
+                val completed = isChapterCompleted(it.id)
+                Log.d("DataManager", "Checking chapter ${it.id} for completion: unlocked=$unlocked, completed=$completed")
+                unlocked && !completed
+            }
+            .minByOrNull { it.index }
+
+        if (firstUncompleted != null) {
+            Log.d("DataManager", "Found first uncompleted chapter: ${firstUncompleted.id}")
+        } else {
+            Log.d("DataManager", "No uncompleted chapters found in course ${course.id}")
+        }
+
+        return firstUncompleted
     }
 
     fun shouldChapterBeLocked(chapterId: String, onComplete: (Boolean) -> Unit) {
@@ -845,6 +940,13 @@ object DataManager {
                     return@getCourseById
                 }
 
+                // If this chapter has been started, it should not be locked regardless
+                if (hasStartedChapter(chapterId)) {
+                    Log.d("DataManager", "Chapter $chapterId has been started, so it should not be locked")
+                    onComplete(false)
+                    return@getCourseById
+                }
+
                 // Check if all previous chapters are completed
                 val previousChaptersCompleted = (0 until chapterIndex).all { i ->
                     val prevChapterId = sortedChapters[i].id
@@ -858,7 +960,17 @@ object DataManager {
     }
 
     fun isChapterCompleted(chapterId: String): Boolean {
-        return completedChapters.contains(chapterId)
+        // Check both our local cache and the chapters actual content
+        if (completedChapters.contains(chapterId)) return true
+
+        // Get the chapter from cache to check if all lessons are completed
+        val chapter = chaptersCache[chapterId] ?: return false
+
+        // A chapter is completed when all its lessons are completed and its quiz is completed
+        val allLessonsCompleted = chapter.lessons.all { isLessonCompletedSync(it.id) }
+        val quizCompleted = chapter.quiz == null || isQuizCompleted(chapterId)
+
+        return allLessonsCompleted && quizCompleted
     }
 
     fun shouldCourseBeLocked(courseId: String, onComplete: (Boolean) -> Unit) {
@@ -890,7 +1002,8 @@ object DataManager {
 
     fun getAllPosts(onComplete: (List<Post>) -> Unit) {
         val sharedPrefs = SharedPreferencesManager.getInstance()
-        val likedPostsKey = "liked_posts_${FirebaseAuth.getInstance().currentUser?.uid ?: "anonymous"}"
+        val likedPostsKey =
+            "liked_posts_${FirebaseAuth.getInstance().currentUser?.uid ?: "anonymous"}"
         val likedPosts = sharedPrefs.getStringSet(likedPostsKey, mutableSetOf())
 
         val sharedPrefsInitialized = sharedPrefs.getBoolean(SPKeys.DATABASE_INITIALIZED, false)
@@ -968,12 +1081,18 @@ object DataManager {
                             timestamp = System.currentTimeMillis()
                         )
 
-                        Log.d("DataManager", "Creating notification for ${post.userName} from $currentUserName, notification ID: $notificationId")
+                        Log.d(
+                            "DataManager",
+                            "Creating notification for ${post.userName} from $currentUserName, notification ID: $notificationId"
+                        )
                         createNotification(notification) { success ->
                             Log.d("DataManager", "Notification creation result: $success")
                         }
                     } else {
-                        Log.d("DataManager", "Not creating notification. post.userName: ${post.userName}, currentUserName: $currentUserName")
+                        Log.d(
+                            "DataManager",
+                            "Not creating notification. post.userName: ${post.userName}, currentUserName: $currentUserName"
+                        )
                     }
 
                     post.likes + 1
@@ -1037,12 +1156,13 @@ object DataManager {
         notificationsListener?.remove()
 
         // Set up a new listener
-        notificationsListener = FirestoreManager.addNotificationsListener(userName) { notifications ->
-            userNotifications.clear()
-            userNotifications.addAll(notifications)
-            unreadNotificationCount = notifications.count { !it.isRead }
-            onUpdate(notifications)
-        }
+        notificationsListener =
+            FirestoreManager.addNotificationsListener(userName) { notifications ->
+                userNotifications.clear()
+                userNotifications.addAll(notifications)
+                unreadNotificationCount = notifications.count { !it.isRead }
+                onUpdate(notifications)
+            }
     }
 
     fun setupPostListener(postId: String, onUpdate: (Post?) -> Unit) {
@@ -1061,5 +1181,53 @@ object DataManager {
 
         activePostListeners.values.forEach { it.remove() }
         activePostListeners.clear()
+    }
+
+    fun getUserStreak(onComplete: (Int) -> Unit) {
+        val currentUserId = FirebaseAuth.getInstance().currentUser?.uid ?: return onComplete(0)
+
+        FirebaseFirestore.getInstance()
+            .collection("users")
+            .document(currentUserId)
+            .get()
+            .addOnSuccessListener { document ->
+                val streak = document.getLong("streakDays")?.toInt() ?: 0
+                onComplete(streak)
+            }
+            .addOnFailureListener {
+                onComplete(0)
+            }
+    }
+
+    fun getTodayGoal(onComplete: (Chapter?) -> Unit) {
+        val sharedPrefs = SharedPreferencesManager.getInstance()
+        val today = LocalDate.now().format(DateTimeFormatter.ISO_DATE)
+        val savedDate = sharedPrefs.getString(KEY_TODAY_GOAL_DATE, "")
+
+        // If we already set a goal today, return that saved goal
+        if (savedDate == today) {
+            val chapterId = sharedPrefs.getString(KEY_TODAY_GOAL_CHAPTER_ID, "")
+            if (chapterId.isNotEmpty()) {
+                getChapterById(chapterId) { chapter ->
+                    onComplete(chapter)
+                }
+                return
+            }
+        }
+
+        // It's a new day or no goal was set - get a new goal from getCurrentOrNextChapter
+        getCurrentOrNextChapter { courseChapterPair ->
+            if (courseChapterPair != null) {
+                val (_, chapter) = courseChapterPair
+
+                // Save today's date and goal chapter
+                sharedPrefs.putString(KEY_TODAY_GOAL_DATE, today)
+                sharedPrefs.putString(KEY_TODAY_GOAL_CHAPTER_ID, chapter.id)
+
+                onComplete(chapter)
+            } else {
+                onComplete(null)
+            }
+        }
     }
 }

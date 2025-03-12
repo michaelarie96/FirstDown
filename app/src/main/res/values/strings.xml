@@ -19,9 +19,9 @@
     <string name="iv_profile_desc">Profile</string>
     <string name="iv_trophy_desc">Trophy</string>
     <string name="iv_football_desc">Football</string>
-    <string name="complete_lesson_goal">Complete %s Module</string>
+    <string name="complete_todays_goal">Complete %s </string>
     <string name="start_str">Start</string>
-    <string name="all_lessons_completed">Congratulations! You\'ve completed all lessons.</string>
+    <string name="all_chapters_completed">Congratulations! You\'ve completed all chapters.</string>
     <string name="start_learning">Start Learning</string>
 
     <!-- Progress Screen -->

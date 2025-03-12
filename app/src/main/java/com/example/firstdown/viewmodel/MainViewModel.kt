@@ -52,4 +52,12 @@ class MainViewModel : ViewModel() {
     fun getLessonById(lessonId: String, onComplete: (Lesson?) -> Unit) {
         DataManager.getLessonById(lessonId, onComplete)
     }
+
+    fun getUserStreak(onComplete: (Int) -> Unit) {
+        DataManager.getUserStreak(onComplete)
+    }
+
+    fun getTodayGoal(onComplete: (Chapter?) -> Unit) {
+        DataManager.getTodayGoal(onComplete)
+    }
 }

@@ -16,6 +16,8 @@ import com.example.firstdown.databinding.FragmentHomeBinding
 import com.example.firstdown.viewmodel.MainViewModel
 import androidx.navigation.fragment.findNavController
 import com.example.firstdown.model.User
+import com.example.firstdown.utilities.ImageLoader
+import java.util.concurrent.atomic.AtomicInteger
 
 class HomeFragment : Fragment() {
 
@@ -40,49 +42,91 @@ class HomeFragment : Fragment() {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
-        binding.loadingSpinner.visibility = View.VISIBLE
+        // Hide main content sections while loading
+        binding.cardTodayGoal.visibility = View.GONE
+        binding.cardNextLesson.visibility = View.GONE
+        binding.layoutTips.visibility = View.GONE
 
         isFirstTimeUser = isNewUserStatic
 
-        setupUI()
+        setupUI {
+            // Show content when loading is complete
+            binding.loadingSpinner.visibility = View.GONE
+
+            binding.cardTodayGoal.visibility = View.VISIBLE
+            binding.cardNextLesson.visibility = View.VISIBLE
+            binding.layoutTips.visibility = View.VISIBLE
+        }
+
         setupListeners()
     }
 
-    private fun setupUI() {
+    private fun setupUI(onComplete: () -> Unit = {}) {
+        val dataLoadCount = AtomicInteger(0)
+        val totalDataToLoad = 4  // User info, goal, learning status, quick tip
+
+        val onDataLoaded = {
+            if (dataLoadCount.incrementAndGet() == totalDataToLoad) {
+                onComplete()
+            }
+        }
+
+        // Load user data
         viewModel.getCurrentUser { currentUser ->
             setupUserInfo(currentUser)
-            setupTodayGoal()
-            setupContinueLearning()
-            setupQuickTip()
+            onDataLoaded()
+        }
 
-            binding.loadingSpinner.visibility = View.GONE
+        // Load today's goal
+        setupTodayGoal {
+            onDataLoaded()
+        }
+
+        // Load continue learning section
+        setupContinueLearning {
+            onDataLoaded()
+        }
+
+        // Load quick tip
+        setupQuickTip {
+            onDataLoaded()
         }
     }
 
     private fun setupUserInfo(currentUser: User) {
         binding.tvGreeting.text = getString(R.string.greeting, currentUser.name)
-        binding.tvStreak.text = getString(R.string.day_streak, currentUser.streakDays)
-    }
 
-    private fun setupTodayGoal() {
-        viewModel.getNextLessonToComplete { nextLesson ->
-            if (nextLesson != null) {
-                binding.tvGoalDescription.text = getString(R.string.complete_lesson_goal, nextLesson.title)
+        viewModel.getUserStreak { streak ->
+            binding.tvStreak.text = getString(R.string.day_streak, streak)
+        }
 
-                viewModel.wasLessonCompletedToday(nextLesson.id) { isCompleted ->
-                    binding.cbGoalCompleted.isChecked = isCompleted
-                    binding.cbGoalCompleted.isEnabled = false
-                }
-            } else {
-                // No more lessons to complete
-                binding.tvGoalDescription.text = getString(R.string.all_lessons_completed)
-                binding.cbGoalCompleted.isChecked = true
-                binding.cbGoalCompleted.isEnabled = false
-            }
+        // Load the user's profile image
+        if (!currentUser.profileImage.isNullOrEmpty()) {
+            ImageLoader.loadImage(currentUser.profileImage, binding.ivProfile)
+        } else {
+            binding.ivProfile.setImageResource(R.drawable.default_avatar)
         }
     }
 
-    private fun setupContinueLearning() {
+    private fun setupTodayGoal(onComplete: () -> Unit = {}) {
+        viewModel.getTodayGoal { chapter ->
+            if (chapter != null) {
+                binding.tvGoalDescription.text = getString(R.string.complete_todays_goal, chapter.title)
+
+                val isCompleted = chapter.isCompleted
+                binding.cbGoalCompleted.isChecked = isCompleted
+                binding.cbGoalCompleted.isEnabled = false
+            } else {
+                // No more chapters to complete
+                binding.tvGoalDescription.text = getString(R.string.all_chapters_completed)
+                binding.cbGoalCompleted.isChecked = true
+                binding.cbGoalCompleted.isEnabled = false
+            }
+            onComplete()
+        }
+    }
+
+    private fun setupContinueLearning(onComplete: () -> Unit = {}) {
         viewModel.getCurrentOrNextChapter { courseChapterPair ->
             if (courseChapterPair != null) {
                 val (course, chapter) = courseChapterPair
@@ -93,31 +137,35 @@ class HomeFragment : Fragment() {
                     } else {
                         binding.tvLearningStatus.text = getString(R.string.continue_learning)
                     }
-                }
 
-                binding.tvLessonTitle.text = course.title
-                binding.tvLessonDescription.text = chapter.title
+                    // Show the course name and chapter title
+                    binding.tvLessonTitle.text = course.title
+                    binding.tvLessonDescription.text = chapter.title
 
-                viewModel.hasStartedChapter(chapter.id) { hasStarted ->
-                    if (hasStarted) {
+                    // Update the button text based on progress
+                    if (chapter.progress > 0) {
                         binding.btnStart.text = getString(R.string.continue_learning_button)
                     } else {
                         binding.btnStart.text = getString(R.string.start_learning)
                     }
+
+                    onComplete()
                 }
             } else {
-                // Handle the case where no courses/chapters are available (Shouldn't happen)
+                // Handle the case where no courses/chapters are available
                 binding.cardNextLesson.visibility = View.GONE
+                onComplete()
             }
         }
     }
 
-    private fun setupQuickTip() {
+    private fun setupQuickTip(onComplete: () -> Unit = {}) {
         viewModel.getRandomQuickTip { quickTip ->
             val tipCard = binding.layoutTips.getChildAt(0)
             val tvTipContent = tipCard.findViewById<TextView>(R.id.tv_tip_content)
 
             tvTipContent.text = quickTip
+            onComplete()
         }
     }
 
