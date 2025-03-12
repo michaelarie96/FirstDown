@@ -5,6 +5,7 @@ import com.example.firstdown.R
 import com.example.firstdown.utilities.FirestoreManager
 import com.example.firstdown.utilities.SharedPreferencesManager
 import com.google.firebase.auth.FirebaseAuth
+import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.ListenerRegistration
 import com.google.gson.Gson
 import kotlinx.coroutines.CoroutineScope
@@ -101,7 +102,9 @@ object DataManager {
             imageUrl = null,
             likes = 24,
             comments = 8,
-            likedByCurrentUser = false
+            likedByCurrentUser = false,
+            timestamp = System.currentTimeMillis() - (2 * 60 * 60 * 1000) // 2 hours ago
+
         ),
         Post(
             id = "post2",
@@ -112,7 +115,8 @@ object DataManager {
             imageUrl = "https://images.unsplash.com/photo-1566577739112-5180d4bf9390?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxzZWFyY2h8Mnx8Zm9vdGJhbGwlMjB0cmFpbmluZ3xlbnwwfHwwfHx8MA%3D%3D&w=1000&q=80",
             likes = 56,
             comments = 12,
-            likedByCurrentUser = false
+            likedByCurrentUser = false,
+            timestamp = System.currentTimeMillis() - (5 * 60 * 60 * 1000) // 5 hours ago
         ),
         Post(
             id = "post3",
@@ -123,7 +127,8 @@ object DataManager {
             imageUrl = null,
             likes = 18,
             comments = 7,
-            likedByCurrentUser = false
+            likedByCurrentUser = false,
+            timestamp = System.currentTimeMillis() - (24 * 60 * 60 * 1000)
         ),
         Post(
             id = "post4",
@@ -134,7 +139,8 @@ object DataManager {
             imageUrl = "https://images.unsplash.com/photo-1566577739112-5180d4bf9390?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxzZWFyY2h8Mnx8Zm9vdGJhbGwlMjB0cmFpbmluZ3xlbnwwfHwwfHx8MA%3D%3D&w=1000&q=80",
             likes = 42,
             comments = 5,
-            likedByCurrentUser = false
+            likedByCurrentUser = false,
+            timestamp = System.currentTimeMillis() - (2 * 24 * 60 * 60 * 1000)
         )
     )
 
@@ -853,6 +859,12 @@ object DataManager {
         } else {
             // Database initialized, fetch from Firestore
             FirestoreManager.getAllPosts { fetchedPosts ->
+                // Add debug logging here
+                Log.d("PostDebug", "Retrieved ${fetchedPosts.size} posts")
+                fetchedPosts.forEachIndexed { index, post ->
+                    Log.d("PostDebug", "Post $index: id=${post.id}, timestamp=${post.timestamp}, timeAgo=${post.timeAgo}")
+                }
+
                 val postsWithLikedStatus = fetchedPosts.map { post ->
                     post.copy(likedByCurrentUser = likedPosts.contains(post.id))
                 }

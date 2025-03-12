@@ -310,8 +310,9 @@ class CommunityFragment : Fragment(), PostAdapter.PostInteractionListener {
         val userName = currentUser?.displayName ?: "Anonymous"
         val userProfileImage = currentUser?.photoUrl?.toString() ?: ""
 
-        // Create a new post with unique ID
+        // Create a new post with unique ID and timestamp
         val postId = UUID.randomUUID().toString()
+        val timestamp = System.currentTimeMillis()
 
         val newPost = Post(
             id = postId,
@@ -322,7 +323,8 @@ class CommunityFragment : Fragment(), PostAdapter.PostInteractionListener {
             imageUrl = null,
             likes = 0,
             comments = 0,
-            likedByCurrentUser = false // Explicitly set to false for new posts
+            likedByCurrentUser = false,
+            timestamp = timestamp // Add timestamp here
         )
 
         // Add the post through ViewModel

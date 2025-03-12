@@ -44,7 +44,14 @@ class FirestoreManager {
                     if (snapshot.isEmpty) {
                         // Database is empty, initialize it with our static data
                         Log.d(TAG, "Database empty, uploading all static data")
-                        uploadAllDataToFirestore(courses, chapters, lessons, quizzes, posts, onComplete)
+                        uploadAllDataToFirestore(
+                            courses,
+                            chapters,
+                            lessons,
+                            quizzes,
+                            posts,
+                            onComplete
+                        )
                     } else {
                         // Database already has data
                         Log.d(TAG, "Database already initialized with data")
@@ -225,7 +232,8 @@ class FirestoreManager {
 
                                 if (coursesMap.containsKey(courseId)) {
                                     // Get the chapters list for this course
-                                    val chaptersList = coursesMap[courseId]?.get("chapters") as MutableList<Chapter>
+                                    val chaptersList =
+                                        coursesMap[courseId]?.get("chapters") as MutableList<Chapter>
 
                                     // Add chapter data
                                     val chapterData = mapOf(
@@ -234,7 +242,8 @@ class FirestoreManager {
                                         "title" to (doc.getString("title") ?: ""),
                                         "description" to (doc.getString("description") ?: ""),
                                         "isLocked" to (doc.getBoolean("isLocked") ?: false),
-                                        "quizCompleted" to (doc.getBoolean("quizCompleted") ?: false),
+                                        "quizCompleted" to (doc.getBoolean("quizCompleted")
+                                            ?: false),
                                         "index" to (doc.getLong("index")?.toInt() ?: 0)
                                     )
 
@@ -259,16 +268,17 @@ class FirestoreManager {
 
                                             // If we've processed all chapters, build the courses list
                                             if (chapters.size == chaptersSnapshot.size()) {
-                                                val coursesList = coursesMap.values.map { courseData ->
-                                                    Course(
-                                                        id = courseData["id"] as String,
-                                                        title = courseData["title"] as String,
-                                                        description = courseData["description"] as String,
-                                                        imageResId = courseData["imageResId"] as Int,
-                                                        chapters = (courseData["chapters"] as List<Chapter>)
-                                                            .sortedBy { it.index }
-                                                    )
-                                                }
+                                                val coursesList =
+                                                    coursesMap.values.map { courseData ->
+                                                        Course(
+                                                            id = courseData["id"] as String,
+                                                            title = courseData["title"] as String,
+                                                            description = courseData["description"] as String,
+                                                            imageResId = courseData["imageResId"] as Int,
+                                                            chapters = (courseData["chapters"] as List<Chapter>)
+                                                                .sortedBy { it.index }
+                                                        )
+                                                    }
 
                                                 val sortedCourses = coursesList.sortedBy { course ->
                                                     courseOrder.indexOf(course.id).let { index ->
@@ -372,7 +382,8 @@ class FirestoreManager {
                                             lessons = lessons,
                                             isLocked = chapterDoc.getBoolean("isLocked") ?: false,
                                             quiz = quiz,
-                                            quizCompleted = chapterDoc.getBoolean("quizCompleted") ?: false,
+                                            quizCompleted = chapterDoc.getBoolean("quizCompleted")
+                                                ?: false,
                                             index = chapterDoc.getLong("index")?.toInt() ?: 0
                                         )
 
@@ -444,12 +455,19 @@ class FirestoreManager {
                 }
         }
 
-        fun updateChapterLockStatus(chapterId: String, isLocked: Boolean, onComplete: () -> Unit = {}) {
+        fun updateChapterLockStatus(
+            chapterId: String,
+            isLocked: Boolean,
+            onComplete: () -> Unit = {}
+        ) {
             db.collection(CHAPTERS_COLLECTION)
                 .document(chapterId)
                 .update("isLocked", isLocked)
                 .addOnSuccessListener {
-                    Log.d(TAG, "Successfully updated lock status for chapter $chapterId to $isLocked")
+                    Log.d(
+                        TAG,
+                        "Successfully updated lock status for chapter $chapterId to $isLocked"
+                    )
                     onComplete()
                 }
                 .addOnFailureListener { e ->
@@ -458,7 +476,11 @@ class FirestoreManager {
                 }
         }
 
-        fun updateChapter(chapterId: String, updates: Map<String, Any>, onComplete: () -> Unit = {}) {
+        fun updateChapter(
+            chapterId: String,
+            updates: Map<String, Any>,
+            onComplete: () -> Unit = {}
+        ) {
             db.collection(CHAPTERS_COLLECTION)
                 .document(chapterId)
                 .update(updates)
@@ -512,7 +534,10 @@ class FirestoreManager {
                 .addOnSuccessListener { doc ->
                     if (doc.exists()) {
                         val quiz = doc.toObject(Quiz::class.java)
-                        Log.d(TAG, "Successfully retrieved quiz for chapter $chapterId with ID $quizDocId")
+                        Log.d(
+                            TAG,
+                            "Successfully retrieved quiz for chapter $chapterId with ID $quizDocId"
+                        )
                         onComplete(quiz)
                     } else {
                         // Try with the original chapter ID as fallback
@@ -522,10 +547,16 @@ class FirestoreManager {
                             .addOnSuccessListener { fallbackDoc ->
                                 if (fallbackDoc.exists()) {
                                     val quiz = fallbackDoc.toObject(Quiz::class.java)
-                                    Log.d(TAG, "Retrieved quiz using fallback ID for chapter $chapterId")
+                                    Log.d(
+                                        TAG,
+                                        "Retrieved quiz using fallback ID for chapter $chapterId"
+                                    )
                                     onComplete(quiz)
                                 } else {
-                                    Log.e(TAG, "No quiz document found for IDs $quizDocId or $chapterId")
+                                    Log.e(
+                                        TAG,
+                                        "No quiz document found for IDs $quizDocId or $chapterId"
+                                    )
                                     // Instead of returning null, let's check the static data
                                     onComplete(null)
                                 }
@@ -550,7 +581,10 @@ class FirestoreManager {
                 .document(currentUserId)
                 .collection(PROGRESS_COLLECTION)
                 .document("user_progress")
-                .update("completedLessons", com.google.firebase.firestore.FieldValue.arrayUnion(lessonId))
+                .update(
+                    "completedLessons",
+                    com.google.firebase.firestore.FieldValue.arrayUnion(lessonId)
+                )
                 .addOnSuccessListener {
                     Log.d(TAG, "Lesson $lessonId marked as completed")
                     onComplete()
@@ -588,7 +622,10 @@ class FirestoreManager {
                 .document(currentUserId)
                 .collection(PROGRESS_COLLECTION)
                 .document("user_progress")
-                .update("completedQuizzes", com.google.firebase.firestore.FieldValue.arrayUnion(chapterId))
+                .update(
+                    "completedQuizzes",
+                    com.google.firebase.firestore.FieldValue.arrayUnion(chapterId)
+                )
                 .addOnSuccessListener {
                     Log.d(TAG, "Quiz for chapter $chapterId marked as completed with score $score")
 
@@ -613,14 +650,14 @@ class FirestoreManager {
 
         fun getAllPosts(onComplete: (List<Post>) -> Unit) {
             db.collection(POSTS_COLLECTION)
-                .orderBy("timeAgo", Query.Direction.DESCENDING)
+                .orderBy("timestamp", Query.Direction.DESCENDING)
                 .get()
                 .addOnSuccessListener { result ->
                     val posts = result.toObjects(Post::class.java)
                     onComplete(posts)
                 }
                 .addOnFailureListener { exception ->
-                    Log.e(TAG, "Error getting posts: $exception")
+                    Log.e(TAG, "Error getting posts: $exception", exception)
                     onComplete(emptyList())
                 }
         }
@@ -654,12 +691,18 @@ class FirestoreManager {
         }
 
         fun addNewPost(post: Post, onComplete: (Boolean) -> Unit = {}) {
-            Log.d(TAG, "Adding new post with ID: ${post.id}")
+            val postWithTimestamp = if (post.timestamp == 0L) {
+                post.copy(timestamp = System.currentTimeMillis())
+            } else {
+                post
+            }
+
+            Log.d(TAG, "Adding new post with ID: ${postWithTimestamp.id}")
             db.collection(POSTS_COLLECTION)
-                .document(post.id)
-                .set(post)
+                .document(postWithTimestamp.id)
+                .set(postWithTimestamp)
                 .addOnSuccessListener {
-                    Log.d(TAG, "Post added successfully with ID: ${post.id}")
+                    Log.d(TAG, "Post added successfully with ID: ${postWithTimestamp.id}")
                     onComplete(true)
                 }
                 .addOnFailureListener { e ->
@@ -683,7 +726,10 @@ class FirestoreManager {
         }
 
         fun createNotification(notification: Notification, onComplete: (Boolean) -> Unit = {}) {
-            Log.d("DataManager", "Creating notification in Firestore: ${notification.id}, recipient: ${notification.recipientUserName}")
+            Log.d(
+                "DataManager",
+                "Creating notification in Firestore: ${notification.id}, recipient: ${notification.recipientUserName}"
+            )
             FirestoreManager.addNotification(notification) { success ->
                 Log.d("DataManager", "Notification created in Firestore: $success")
                 onComplete(success)
@@ -716,7 +762,11 @@ class FirestoreManager {
                 }
         }
 
-        fun updateNotification(notificationId: String, updates: Map<String, Any>, onComplete: (Boolean) -> Unit) {
+        fun updateNotification(
+            notificationId: String,
+            updates: Map<String, Any>,
+            onComplete: (Boolean) -> Unit
+        ) {
             db.collection(NOTIFICATIONS_COLLECTION)
                 .document(notificationId)
                 .update(updates)
@@ -754,7 +804,10 @@ class FirestoreManager {
                 }
         }
 
-        fun addNotificationsListener(userName: String, onUpdate: (List<Notification>) -> Unit): ListenerRegistration {
+        fun addNotificationsListener(
+            userName: String,
+            onUpdate: (List<Notification>) -> Unit
+        ): ListenerRegistration {
             return db.collection(NOTIFICATIONS_COLLECTION)
                 .whereEqualTo("recipientUserName", userName)
                 .addSnapshotListener { snapshot, e ->
@@ -781,5 +834,6 @@ class FirestoreManager {
                     }
                 }
         }
+
     }
 }
