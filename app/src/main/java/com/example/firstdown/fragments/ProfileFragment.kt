@@ -15,6 +15,7 @@ import androidx.fragment.app.viewModels
 import com.example.firstdown.R
 import com.example.firstdown.WelcomeActivity
 import com.example.firstdown.databinding.FragmentProfileBinding
+import com.example.firstdown.utilities.ImageLoader
 import com.example.firstdown.viewmodel.ProfileViewModel
 import com.google.firebase.auth.FirebaseAuth
 
@@ -43,11 +44,17 @@ class ProfileFragment : Fragment() {
     private fun setupUI() {
         viewModel.getCurrentUser { currentUser ->
             binding.tvUserName.text = currentUser.name
-            binding.tvUserTitle.text = currentUser.title
+
+            if (!currentUser.profileImage.isNullOrEmpty()) {
+                ImageLoader.loadImage(currentUser.profileImage, binding.ivProfile)
+            } else {
+                binding.ivProfile.setImageResource(R.drawable.default_avatar)
+            }
 
             binding.tvLessonsCount.text = currentUser.lessonsCompleted.toString()
+            binding.tvChaptersCount.text = currentUser.chaptersCompleted.toString()
+            binding.tvCoursesCount.text = currentUser.coursesCompleted.toString()
             binding.tvScorePercent.text = "${currentUser.averageQuizScore}%"
-            binding.tvTimeSpent.text = "${currentUser.timeSpent / 60}h"
         }
     }
 

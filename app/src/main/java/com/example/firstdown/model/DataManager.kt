@@ -29,6 +29,7 @@ object DataManager {
         const val COMPLETED_COURSES = "completed_courses"
         const val STARTED_LESSONS = "started_lessons"
         const val STARTED_CHAPTERS = "started_chapters"
+        const val QUIZ_SCORES = "quiz_scores"
     }
 
     // Local cache
@@ -38,6 +39,7 @@ object DataManager {
     private val completedCourses = mutableSetOf<String>()
     private val startedLessons = mutableSetOf<String>()
     private val startedChapters = mutableSetOf<String>()
+    private val quizScores = mutableListOf<Int>()
     private val coursesCache = mutableMapOf<String, Course>()
     private val chaptersCache = mutableMapOf<String, Chapter>()
     private val lessonsCache = mutableMapOf<String, Lesson>()
@@ -226,14 +228,18 @@ object DataManager {
 
                         saveProgressToSharedPreferences()
 
-                        Log.d("DataManager", "User progress loaded successfully from Firestore")
-                        onComplete()
+                        loadQuizScoresFromFirestore {
+                            Log.d("DataManager", "User progress and quiz scores loaded successfully from Firestore")
+                            onComplete()
+                        }
                     }
                 } else {
-                    // No saved progress found, use defaults
+                    // No saved progress found, still try to load quiz scores
                     withContext(Dispatchers.Main) {
                         isProgressLoaded = true
-                        onComplete()
+                        loadQuizScoresFromFirestore {
+                            onComplete()
+                        }
                     }
                 }
             } catch (e: Exception) {
@@ -294,6 +300,10 @@ object DataManager {
         startedChapters.clear()
         startedChapters.addAll(gson.fromJson(startedChaptersJson, Array<String>::class.java))
 
+        val quizScoresJson = sharedPrefs.getString(SPKeys.QUIZ_SCORES, "[]")
+        quizScores.clear()
+        quizScores.addAll(gson.fromJson(quizScoresJson, Array<Int>::class.java))
+
         isProgressLoaded = true
     }
 
@@ -330,7 +340,7 @@ object DataManager {
                 lessonsCompleted = completedLessons.size,
                 chaptersCompleted = completedChapters.size,
                 coursesCompleted = completedCourses.size,
-                quizScores = emptyList(),
+                quizScores = quizScores.toList(),
                 timeSpent = 0
             ))
         } else {
@@ -345,7 +355,7 @@ object DataManager {
                 chaptersCompleted = completedChapters.size,
                 coursesCompleted = completedCourses.size,
                 quizScores = listOf(85, 90, 92, 88),
-                timeSpent = 24 * 60 // 24 hours in minutes
+                timeSpent = 24 * 60
             ))
         }
     }
@@ -519,21 +529,85 @@ object DataManager {
     }
 
     fun markQuizCompleted(chapterId: String, score: Int, onComplete: () -> Unit = {}) {
-        // Add to completed quizzes
         completedQuizzes.add(chapterId)
 
-        // Mark the chapter as completed
+        recordQuizScore(chapterId, score)
+
         markChapterComplete(chapterId)
 
-        // Save to shared preferences and Firestore
         saveProgress()
 
         FirestoreManager.markQuizCompleted(chapterId, score) {
-            // Update the chapter record in Firestore to mark quiz as completed
             FirestoreManager.updateChapter(chapterId, mapOf("quizCompleted" to true)) {
                 onComplete()
             }
         }
+    }
+
+    fun recordQuizScore(chapterId: String, score: Int) {
+        quizScores.add(score)
+
+        saveQuizScoresToPreferences()
+
+        saveQuizScoresToFirestore(score)
+    }
+
+    private fun saveQuizScoresToPreferences() {
+        val sharedPrefs = SharedPreferencesManager.getInstance()
+        val gson = Gson()
+        sharedPrefs.putString("quiz_scores", gson.toJson(quizScores))
+    }
+
+    private fun loadQuizScoresFromPreferences() {
+        val sharedPrefs = SharedPreferencesManager.getInstance()
+        val gson = Gson()
+        val scoresJson = sharedPrefs.getString("quiz_scores", "[]")
+        val loadedScores = gson.fromJson(scoresJson, Array<Int>::class.java)
+        quizScores.clear()
+        quizScores.addAll(loadedScores)
+    }
+
+    private fun saveQuizScoresToFirestore(score: Int) {
+        val currentUserId = FirebaseAuth.getInstance().currentUser?.uid ?: return
+
+        val quizScoreData = hashMapOf(
+            "score" to score,
+            "timestamp" to System.currentTimeMillis()
+        )
+
+        FirebaseFirestore.getInstance()
+            .collection("users")
+            .document(currentUserId)
+            .collection("quiz_scores")
+            .add(quizScoreData)
+    }
+
+    private fun loadQuizScoresFromFirestore(onComplete: () -> Unit = {}) {
+        val currentUserId = FirebaseAuth.getInstance().currentUser?.uid ?: return onComplete()
+
+        FirebaseFirestore.getInstance()
+            .collection("users")
+            .document(currentUserId)
+            .collection("quiz_scores")
+            .get()
+            .addOnSuccessListener { documents ->
+                val scores = documents.mapNotNull { doc ->
+                    doc.getLong("score")?.toInt()
+                }
+
+                if (scores.isNotEmpty()) {
+                    quizScores.clear()
+                    quizScores.addAll(scores)
+                    saveQuizScoresToPreferences() // Sync with SharedPreferences
+                }
+
+                onComplete()
+            }
+            .addOnFailureListener {
+                // Fall back to local preferences if Firestore fails
+                loadQuizScoresFromPreferences()
+                onComplete()
+            }
     }
 
     fun markChapterComplete(chapterId: String) {

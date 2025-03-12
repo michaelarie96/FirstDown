@@ -12,6 +12,7 @@ data class User(
     val coursesCompleted: Int = 0,
     val quizScores: List<Int> = emptyList(),
     val timeSpent: Long = 0 // in minutes
+
 ) {
     // Calculate the average quiz score
     val averageQuizScore: Int
