@@ -8,6 +8,7 @@ import com.example.firstdown.R
 import com.example.firstdown.databinding.ItemPostBinding
 import com.example.firstdown.model.Post
 import com.example.firstdown.utilities.ImageLoader
+import com.example.firstdown.utilities.TimeUtils
 
 class PostAdapter(private var posts: List<Post> = emptyList()) :
     RecyclerView.Adapter<PostAdapter.PostViewHolder>() {
@@ -59,7 +60,7 @@ class PostAdapter(private var posts: List<Post> = emptyList()) :
             with(binding) {
                 // Set text values
                 tvUserName.text = post.userName
-                tvTimeAgo.text = post.timeAgo
+                tvTimeAgo.text = TimeUtils.getTimeAgo(post.timestamp)
                 tvPostContent.text = post.content
                 tvLikes.text = post.likes.toString()
 

@@ -27,6 +27,7 @@ import com.example.firstdown.databinding.FragmentCommunityBinding
 import com.example.firstdown.model.DataManager
 import com.example.firstdown.model.Notification
 import com.example.firstdown.model.Post
+import com.example.firstdown.utilities.TimeUtils
 import com.example.firstdown.viewmodel.CommunityViewModel
 import com.google.android.material.tabs.TabLayout
 import com.google.android.material.textfield.TextInputEditText
@@ -417,13 +418,19 @@ class CommunityFragment : Fragment(), PostAdapter.PostInteractionListener {
     private fun startPostsRefresh() {
         notificationHandler.postDelayed(object : Runnable {
             override fun run() {
-                // Refresh posts list
-                displayPosts()
+                // Refresh posts list but also update timeAgo strings
+                viewModel.getAllPosts { allPosts ->
+                    val updatedPosts = allPosts.map { post ->
+                        // Keep everything the same but update the timeAgo
+                        post.copy(timeAgo = TimeUtils.getTimeAgo(post.timestamp))
+                    }
+                    displayFilteredPosts(updatedPosts)
+                }
 
                 // Continue refreshing
-                notificationHandler.postDelayed(this, 10000) // Refresh every 10 seconds
+                notificationHandler.postDelayed(this, 60000) // Refresh every minute
             }
-        }, 5000) // Start after 5 seconds
+        }, 60000) // Start after a minute
     }
 
     private fun logNotificationStatus(message: String) {

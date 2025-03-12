@@ -4,6 +4,7 @@ import android.util.Log
 import com.example.firstdown.R
 import com.example.firstdown.utilities.FirestoreManager
 import com.example.firstdown.utilities.SharedPreferencesManager
+import com.example.firstdown.utilities.TimeUtils
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.ListenerRegistration
@@ -96,7 +97,7 @@ object DataManager {
         Post(
             id = "post1",
             userProfileImage = "https://i.pravatar.cc/150?img=1",
-            userName = "John Cooper1",
+            userName = "John Cooper",
             timeAgo = "2 hours ago",
             content = "What's the best way to improve ball control during high-pressure situations? Any drills recommendations?",
             imageUrl = null,
@@ -859,16 +860,13 @@ object DataManager {
         } else {
             // Database initialized, fetch from Firestore
             FirestoreManager.getAllPosts { fetchedPosts ->
-                // Add debug logging here
-                Log.d("PostDebug", "Retrieved ${fetchedPosts.size} posts")
-                fetchedPosts.forEachIndexed { index, post ->
-                    Log.d("PostDebug", "Post $index: id=${post.id}, timestamp=${post.timestamp}, timeAgo=${post.timeAgo}")
+                val postsWithFormattedTime = fetchedPosts.map { post ->
+                    post.copy(
+                        timeAgo = TimeUtils.getTimeAgo(post.timestamp),
+                        likedByCurrentUser = likedPosts.contains(post.id)
+                    )
                 }
-
-                val postsWithLikedStatus = fetchedPosts.map { post ->
-                    post.copy(likedByCurrentUser = likedPosts.contains(post.id))
-                }
-                onComplete(postsWithLikedStatus)
+                onComplete(postsWithFormattedTime)
             }
         }
     }
