@@ -154,19 +154,29 @@ class QuizFragment : Fragment() {
             viewModel.markQuizCompleted(chapterId, score) {
                 Toast.makeText(requireContext(), "Quiz completed! Your score: $score%", Toast.LENGTH_LONG).show()
 
-                // Return to chapters screen
-                findNavController().popBackStack(R.id.ChaptersFragment, false)
+                // Get the course ID for this chapter
+                viewModel.getChapterById(chapterId) { chapter ->
+                    val courseId = chapter?.courseId ?: ""
 
-                // Force refresh of the chapters fragment
-                findNavController().currentDestination?.let { destination ->
-                    if (destination.id == R.id.ChaptersFragment) {
-                        findNavController().navigate(
-                            R.id.ChaptersFragment,
-                            null,
-                            NavOptions.Builder()
-                                .setPopUpTo(R.id.ChaptersFragment, true)
-                                .build()
-                        )
+                    // Create bundle with course ID
+                    val bundle = Bundle().apply {
+                        putString("courseId", courseId)
+                    }
+
+                    // Return to chapters screen with the correct course ID
+                    findNavController().popBackStack(R.id.ChaptersFragment, false)
+
+                    // Force refresh with the course ID
+                    findNavController().currentDestination?.let { destination ->
+                        if (destination.id == R.id.ChaptersFragment) {
+                            findNavController().navigate(
+                                R.id.ChaptersFragment,
+                                bundle,
+                                NavOptions.Builder()
+                                    .setPopUpTo(R.id.ChaptersFragment, true)
+                                    .build()
+                            )
+                        }
                     }
                 }
             }
