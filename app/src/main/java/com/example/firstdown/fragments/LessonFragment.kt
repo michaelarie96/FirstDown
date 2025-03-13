@@ -146,7 +146,19 @@ class LessonFragment : Fragment() {
 
     private fun setupListeners() {
         binding.btnBack.setOnClickListener {
-            findNavController().popBackStack(R.id.ChaptersFragment, false)
+            // Try to navigate to chapters first
+            viewModel.getChapterForLesson(lessonId) { chapter ->
+                if (chapter != null) {
+                    // Navigate back to chapters with the correct course ID
+                    val action = LessonFragmentDirections.actionLessonFragmentToChaptersFragment(
+                        courseId = chapter.courseId
+                    )
+                    findNavController().navigate(action)
+                } else {
+                    // Fallback navigation
+                    findNavController().navigateUp()
+                }
+            }
         }
 
         binding.btnPrevious.setOnClickListener {

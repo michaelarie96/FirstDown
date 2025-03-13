@@ -67,6 +67,33 @@ class HomeActivity : AppCompatActivity() {
                         binding.bottomNavigation.menu.findItem(menuItem)?.isChecked = true
                     }
                 }
+
+                // Set the bottom navigation item selected listener
+                binding.bottomNavigation.setOnItemSelectedListener { item ->
+                    when (item.itemId) {
+                        R.id.navigation_home -> {
+                            navController.popBackStack(R.id.navigation_home, false)
+                            navController.navigate(R.id.navigation_home)
+                            true
+                        }
+                        R.id.navigation_courses -> {
+                            navController.popBackStack(R.id.navigation_courses, false)
+                            navController.navigate(R.id.navigation_courses)
+                            true
+                        }
+                        R.id.navigation_community -> {
+                            navController.popBackStack(R.id.navigation_community, false)
+                            navController.navigate(R.id.navigation_community)
+                            true
+                        }
+                        R.id.navigation_profile -> {
+                            navController.popBackStack(R.id.navigation_profile, false)
+                            navController.navigate(R.id.navigation_profile)
+                            true
+                        }
+                        else -> false
+                    }
+                }
             } else {
                 // Handle the case where nav host fragment is not found, helps with debugging
                 throw IllegalStateException("NavHostFragment not found in activity_home.xml")
