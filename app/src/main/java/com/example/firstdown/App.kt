@@ -19,5 +19,8 @@ class App: Application() {
 
         SharedPreferencesManager.init(this)
         DataManager.initialize()
+
+        // To upload static collections to database when necessary
+        //SharedPreferencesManager.getInstance().putBoolean("database_initialized", false)
     }
 }

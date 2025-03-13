@@ -1,6 +1,7 @@
 package com.example.firstdown.fragments
 
 import android.os.Bundle
+import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -41,6 +42,14 @@ class CoursesFragment : Fragment(), CourseAdapter.OnCourseClickListener {
         binding.rvCourses.visibility = View.GONE
 
         viewModel.getAllCourses { courses ->
+            courses.forEach { course ->
+                val resourceName = try {
+                    resources.getResourceName(course.imageResId)
+                } catch (e: Exception) {
+                    "INVALID RESOURCE ID"
+                }
+                Log.d("CoursesFragment", "Course: ${course.id}, ImageResId: ${course.imageResId}, Resource name: $resourceName")
+            }
             courseAdapter.updateCourses(courses)
 
             binding.progressBarCourses.visibility = View.GONE

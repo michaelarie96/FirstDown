@@ -77,6 +77,58 @@ object DataManager {
         "Review game film to identify tendencies in your opponents"
     )
 
+    private val posts = listOf(
+        Post(
+            id = "post1",
+            userProfileImage = "https://i.pravatar.cc/150?img=1",
+            userName = "John Cooper",
+            timeAgo = "2 hours ago",
+            content = "What's the best way to improve ball control during high-pressure situations? Any drills recommendations?",
+            imageUrl = null,
+            likes = 24,
+            comments = 8,
+            likedByCurrentUser = false,
+            timestamp = System.currentTimeMillis() - (2 * 60 * 60 * 1000) // 2 hours ago
+
+        ),
+        Post(
+            id = "post2",
+            userProfileImage = "https://i.pravatar.cc/150?img=2",
+            userName = "Sarah Wilson",
+            timeAgo = "5 hours ago",
+            content = "Pro tip: Here's a quick drill for improving your first touch. Practice this for 15 minutes daily and you'll see improvement within a week.",
+            imageUrl = "https://images.unsplash.com/photo-1566577739112-5180d4bf9390?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxzZWFyY2h8Mnx8Zm9vdGJhbGwlMjB0cmFpbmluZ3xlbnwwfHwwfHx8MA%3D%3D&w=1000&q=80",
+            likes = 56,
+            comments = 12,
+            likedByCurrentUser = false,
+            timestamp = System.currentTimeMillis() - (5 * 60 * 60 * 1000) // 5 hours ago
+        ),
+        Post(
+            id = "post3",
+            userProfileImage = "https://i.pravatar.cc/150?img=3",
+            userName = "Mike Johnson",
+            timeAgo = "Yesterday",
+            content = "Can someone explain the difference between Cover 2 and Cover 3? I'm trying to understand defensive schemes better.",
+            imageUrl = null,
+            likes = 18,
+            comments = 7,
+            likedByCurrentUser = false,
+            timestamp = System.currentTimeMillis() - (24 * 60 * 60 * 1000)
+        ),
+        Post(
+            id = "post4",
+            userProfileImage = "https://i.pravatar.cc/150?img=4",
+            userName = "Emma Rodriguez",
+            timeAgo = "2 days ago",
+            content = "Just completed the Quarterback Fundamentals course. The mechanics section really helped me improve my throwing accuracy!",
+            imageUrl = "https://images.unsplash.com/photo-1566577739112-5180d4bf9390?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxzZWFyY2h8Mnx8Zm9vdGJhbGwlMjB0cmFpbmluZ3xlbnwwfHwwfHx8MA%3D%3D&w=1000&q=80",
+            likes = 42,
+            comments = 5,
+            likedByCurrentUser = false,
+            timestamp = System.currentTimeMillis() - (2 * 24 * 60 * 60 * 1000)
+        )
+    )
+
     fun initialize(onComplete: () -> Unit = {}) {
         val sharedPrefs = SharedPreferencesManager.getInstance()
 

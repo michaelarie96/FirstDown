@@ -1,5 +1,6 @@
 package com.example.firstdown.adapters
 
+import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -63,7 +64,12 @@ class CourseAdapter(
 
         fun bind(course: Course, listener: OnCourseClickListener) {
             // Set course image
-            ivCourseImage.setImageResource(course.imageResId)
+            try {
+                ivCourseImage.setImageResource(course.imageResId)
+            } catch (e: Exception) {
+                Log.e("CourseAdapter", "Failed to load image for course: ${course.id}, imageResId: ${course.imageResId}", e)
+                ivCourseImage.setImageResource(R.drawable.football_field_bg) // Fallback image
+            }
 
             // Set course title and description
             tvCourseTitle.text = course.title
